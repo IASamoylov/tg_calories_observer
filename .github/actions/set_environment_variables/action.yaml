@@ -1,0 +1,14 @@
+name: Set environment variables
+
+description: Configures environment variables for a workflow
+inputs:
+  file:
+    description: File path to variable file or directory
+    required: true
+runs:
+  using: composite
+  steps:
+    - run: |
+        echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
+        cat ${{ inputs.file }} >> ${GITHUB_ENV}
+      shell: bash

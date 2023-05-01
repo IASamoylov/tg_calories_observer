@@ -16,4 +16,7 @@
 
 bin
 
+unit.report.xml
+unit.coverage.out
+
 .trunk
