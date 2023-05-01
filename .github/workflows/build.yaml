@@ -1,0 +1,99 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - release/*
+      - feature/*
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.github/variables/.env
+      - name: Setup Golang with cache
+        uses: magnetikonline/action-golang-cache@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Install Gotestsum
+        run: go install gotest.tools/gotestsum@latest
+      - name: Build
+        run: go build -v ./...
+      - name: Test
+        env:
+          LOCAL_BIN: ~/go/bin
+        run: make test
+      - name: Upload test reports
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.GO_TEST_ARTIFACT_NAME }}
+          path: |
+            ${{ env.GO_TEST_REPORT }}
+            ${{ env.GO_TEST_COVER_PROFILE }}
+
+  reports:
+    name: Go Test Report
+    needs: build
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      checks: write
+      pull-requests: write
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.github/variables/.env
+      - name: Download test reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.GO_TEST_ARTIFACT_NAME }}
+      - name: Go Test Report
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Go Test Report
+          junit_files: ${{ env.GO_TEST_REPORT }}
+      - name: Go Test Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ env.GO_TEST_COVER_PROFILE }}
+          fail_ci_if_error: true
+
+  golangci:
+    name: Lint
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.github/variables/.env
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
+          version: latest

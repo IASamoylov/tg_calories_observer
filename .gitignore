@@ -16,4 +16,9 @@
 
 bin
 
+unit.report.xml
+unit.coverage.out
+
 .trunk
+
+.DS_Store

@@ -1,0 +1,50 @@
+# Options for analysis running.
+run:
+  # The default concurrency value is the number of available CPU.
+  concurrency: 4
+  # Timeout for analysis, e.g. 30s, 5m.
+  # Default: 1m
+  timeout: 10m
+  # Exit code when at least one issue was found.
+  # Default: 1
+  issues-exit-code: 2
+  # Include test files or not.
+  # Default: true
+  tests: true
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - depguard
+    - goconst
+    - goimports
+    - gosec
+    - govet
+    - ineffassign
+    - contextcheck
+    - errchkjson
+    - gofmt
+    - megacheck
+    - revive
+    - typecheck
+    - unused
+    - ireturn
+    - lll
+    - nlreturn
+    - paralleltest
+
+issues:
+  exclude-use-default: false
+  exclude:
+    - G104
+    - exported func .* returns unexported type .*, which can be annoying to use
+    - should have a package comment
+    - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked
+    - should check returned error before deferring
+    - package-comments
+
+linters-settings:
+  lll:
+    line-length: 120
+    tab-width: 2
