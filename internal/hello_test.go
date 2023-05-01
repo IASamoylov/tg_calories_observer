@@ -23,7 +23,7 @@ var tests = []Test{
 	{-1, "negative"},
 	{5, "small"},
 	{1000, "enormous"},
-	{100, "huge_failed"},
+	{100, "huge"},
 }
 
 func TestSize(t *testing.T) {
