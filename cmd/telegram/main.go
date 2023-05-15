@@ -12,7 +12,7 @@ import (
 
 func main() {
 	multicloser.AddGlobal(serverready.NewHTTPServer(":9090").Run())
-	gracefull.Shutdown(multicloser.GetGlobalCloser(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	graceful.Shutdown(multicloser.GetGlobalCloser(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	multicloser.WaitGlobal()
 	log.Print("Server Stopped")
