@@ -5,7 +5,7 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/gracefull"
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/graceful"
 	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
 	serverready "github.com/IASamoylov/tg_calories_observer/internal/pkg/server_ready"
 )

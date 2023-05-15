@@ -1,4 +1,4 @@
-package gracefull
+package graceful
 
 import (
 	"fmt"
