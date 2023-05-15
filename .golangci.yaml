@@ -38,6 +38,7 @@ issues:
   exclude-use-default: false
   exclude:
     - G104
+    - S1038
     - exported func .* returns unexported type .*, which can be annoying to use
     - should have a package comment
     - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked

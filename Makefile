@@ -2,11 +2,14 @@ export GO111MODULE=on
 
 LOCAL_BIN?=$(CURDIR)/bin
 
+export PATH := $(PATH):$(LOCAL_BIN)
+
 .PHONY: bin-deps
 bin-deps:
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.10.0
 	GOBIN=$(LOCAL_BIN) go install github.com/golang/mock/mockgen@v1.6.0
 	GOBIN=$(LOCAL_BIN) go install gotest.tools/gotestsum@latest
+	go get github.com/golang/mock/mockgen
 
 GO_TEST_DIRECTORY:=./internal/...
 GO_TEST_COVER_PROFILE?=unit.coverage.out
@@ -14,7 +17,7 @@ GO_TEST_REPORT?=unit.report.xml
 
 .PHONY: test
 test:
-	$(LOCAL_BIN)/gotestsum \
+	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
 		--format testname \
 		--packages $(GO_TEST_DIRECTORY) \
 		--junitfile $(GO_TEST_REPORT) \
@@ -44,3 +47,7 @@ lint: .install-lint
 .PHONY: lint-full
 lint-full: .install-lint
 	$(LOCAL_BIN)/golangci-lint run --config=.golangci.yaml ./...
+
+.PHONY: codegen
+codegen:
+	go generate ./...

@@ -1,1 +1,1 @@
-# Telegram bot for calories_observer
+# Telegram bot for calories observer
