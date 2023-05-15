@@ -15,6 +15,8 @@ import (
 func Shutdown(closer io.Closer, signals ...os.Signal) {
 	if len(signals) == 0 {
 		log.Println("the signal to stop the application is not set")
+
+		return
 	}
 
 	go func() {
