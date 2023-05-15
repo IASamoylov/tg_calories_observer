@@ -1,0 +1,17 @@
+{
+    "editor.formatOnSave": true,
+    "editor.rulers": [
+        120
+    ],
+    "go.lintTool": "golangci-lint",
+    "go.buildOnSave": "package",
+    "go.lintOnSave": "package",
+    "go.formatTool": "gofmt",
+    "go.coverOnSave": true,
+    "go.coverOnSingleTest": true,
+    "go.autocompleteUnimportedPackages": true,
+    "go.inlayHints.rangeVariableTypes": true,
+    "go.inlayHints.parameterNames": true,
+    "go.inlayHints.assignVariableTypes": true,
+    "go.inlayHints.constantValues": true,
+}
