@@ -83,7 +83,20 @@ run: build
 
 ## test: runs tests via gotestsum with coverage
 .PHONY: test
-test: codegen
+test: 
+	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
+		--format testname \
+		--packages $(GO_TEST_DIRECTORY) \
+		--junitfile $(GO_TEST_REPORT) \
+		--junitfile-testcase-classname relative \
+		-- -covermode=count -coverprofile=$(GO_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_TEST_DIRECTORY)
+	grep -vE '$(GO_TEST_COVER_EXCLUDE)' $(GO_TEST_COVER_PROFILE).tmp > $(GO_TEST_COVER_PROFILE)
+	rm $(GO_TEST_COVER_PROFILE).tmp
+
+
+## cg-test: runs codegen before tests
+.PHONY: cg-test
+cg-test: codegen
 	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
 		--format testname \
 		--packages $(GO_TEST_DIRECTORY) \
