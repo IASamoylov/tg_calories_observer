@@ -2,7 +2,6 @@ ARG GO_VERSION
 
 FROM golang:${GO_VERSION}-alpine AS build
 
-ARG APP_NAME
 ARG APP_LDFLAGS
 
 WORKDIR /app
@@ -15,11 +14,11 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -ldflags="${APP_LDFLAGS}" -o=./build/${APP_NAME} ./cmd/telegram/main.go
+RUN CGO_ENABLED=0 go build -ldflags="${APP_LDFLAGS}" -o=./build/tbco-web-server ./cmd/telegram/main.go
 
 FROM gcr.io/distroless/static-debian11
 
-COPY --from=build  /app/build/${APP_NAME} /
+COPY --from=build  /app/build/tbco-web-server /
 
 EXPOSE 9090
 

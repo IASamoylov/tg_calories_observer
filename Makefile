@@ -60,7 +60,6 @@ build:
 .PHONY: build-docker
 build-docker:
 	docker build \
-		--build-arg APP_NAME=${APP_NAME} \
 		--build-arg APP_LDFLAGS=${APP_LDFLAGS} \
 		--build-arg GO_VERSION=${GO_VERSION} \
 		--tag ${APP_NAME}:${APP_VERSION} \
