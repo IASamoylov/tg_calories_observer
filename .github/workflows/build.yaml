@@ -28,16 +28,16 @@ jobs:
         uses: magnetikonline/action-golang-cache@v4
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: Install Gotestsum
+      - name: Install gotestsum
         run: go install gotest.tools/gotestsum@latest
       - name: Build
-        run: go build -v ./...
+        run: make build
       - name: Test
         env:
           LOCAL_BIN: ~/go/bin
         run: make test
       - name: Upload test reports
-        if: success() || failure()
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.GO_TEST_ARTIFACT_NAME }}

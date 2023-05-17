@@ -8,9 +8,6 @@ import (
 	"os/signal"
 )
 
-//go:generate mockgen -destination=mocks/mocks_signal.go -package=mocks os Signal
-//go:generate mockgen -destination=mocks/mocks_closer.go -package=mocks io Closer
-
 // Shutdown closes the resource after receiving a signal about the end of the application
 func Shutdown(closer io.Closer, signals ...os.Signal) {
 	if len(signals) == 0 {
