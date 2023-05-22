@@ -56,10 +56,19 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.github/variables/.env
-      - name: Set Environment Variables
-        uses: ./.github/actions/yandex_build_and_push
+      - name: Login to Yandex Cloud Container Registry
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v1
         with:
-          image-tag: beta
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
+      - name: Build, tag, and push image to Yandex Cloud Container Registry
+        env:
+          CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
+          APP_VERSION: ${{ env.GITHUB_SHA_SHORT }}
+        run: |
+          make build-docker
+          make push-docker
 
   reports:
     name: Go Test Report
