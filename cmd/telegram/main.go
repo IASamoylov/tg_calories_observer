@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	log.Println("start")
 	multicloser.AddGlobal(serverready.NewHTTPServer(":9090").Run())
 	graceful.Shutdown(multicloser.GetGlobalCloser(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
