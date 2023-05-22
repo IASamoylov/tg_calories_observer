@@ -1,6 +1,7 @@
 # Change these variables as necessary.
 LOCAL_BIN?=$(CURDIR)/bin
-APP_NAME:=tbco-web-server
+CONTAINER_REGISTRY?=
+APP_NAME=tg_calories_observer
 APP_VERSION?=dev
 # APP_LDFLAGS?="\"-s -w\""
 APP_LDFLAGS?=
@@ -62,7 +63,7 @@ build-docker:
 	docker build \
 		--build-arg APP_LDFLAGS=${APP_LDFLAGS} \
 		--build-arg GO_VERSION=${GO_VERSION} \
-		--tag ${APP_NAME}:${APP_VERSION} \
+		--tag ${CONTAINER_REGISTRY}${APP_NAME}:${APP_VERSION} \
 		--file .build/Dockerfile \
 		.
 

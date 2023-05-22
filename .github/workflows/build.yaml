@@ -7,21 +7,19 @@ on:
   push:
     branches:
       - main
+      - beta/*
   pull_request:
     branches:
       - main
-      - release/*
-      - feature/*
+      - beta/*
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Checkout
-        uses: actions/checkout@v3
-      - name: Set Environment Variables
-        uses: ./.github/actions/set_environment_variables
+      - name: Setup Checkout & set Environment Variables
+        uses: ./.github/actions/checkout
         with:
           file: ./.github/variables/.env
       - name: Setup Golang with cache
@@ -54,10 +52,8 @@ jobs:
       checks: write
       pull-requests: write
     steps:
-      - name: Setup Checkout
-        uses: actions/checkout@v3
-      - name: Set Environment Variables
-        uses: ./.github/actions/set_environment_variables
+      - name: Setup Checkout & set Environment Variables
+        uses: ./.github/actions/checkout
         with:
           file: ./.github/variables/.env
       - name: Download test reports
@@ -82,10 +78,8 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' }}
     steps:
-      - name: Setup Checkout
-        uses: actions/checkout@v3
-      - name: Set Environment Variables
-        uses: ./.github/actions/set_environment_variables
+      - name: Setup Checkout & set Environment Variables
+        uses: ./.github/actions/checkout
         with:
           file: ./.github/variables/.env
       - uses: actions/setup-go@v4
