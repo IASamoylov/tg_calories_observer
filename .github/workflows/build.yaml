@@ -49,6 +49,7 @@ jobs:
     name: Push to Yandex Container Registry
     needs: build
     runs-on: ubuntu-latest
+    # if: ${{ github.event_name == 'push' }}
     steps:
       - name: Setup Checkout
         uses: actions/checkout@v3
