@@ -46,7 +46,7 @@ jobs:
             ${{ env.GO_TEST_COVER_PROFILE }}
 
   push:
-    name: push
+    name: Push to Yandex Container Registry
     needs: build
     runs-on: ubuntu-latest
     steps:
