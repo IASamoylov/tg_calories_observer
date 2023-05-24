@@ -1,19 +1,20 @@
 # Change these variables as necessary.
+# source ./build/.env
+include ./.build/.env
+export
+
 LOCAL_BIN?=$(CURDIR)/bin
 CONTAINER_REGISTRY?=
-APP_NAME=tg_calories_observer
 APP_VERSION?=dev
 # APP_LDFLAGS?="\"-s -w\""
 APP_LDFLAGS?=
 
-GO_VERSION:=1.20
 GO_TEST_DIRECTORY:=./internal/...
 GO_TEST_COVER_PROFILE?=unit.coverage.out
 GO_TEST_REPORT?=unit.report.xml
 GO_TEST_COVER_EXCLUDE:=mocks|config
 
 export PATH:=$(PATH):$(LOCAL_BIN)
-export GO111MODULE=on
 
 # ==================================================================================== #
 # HELPERS
