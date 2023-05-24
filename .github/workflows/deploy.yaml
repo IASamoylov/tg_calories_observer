@@ -1,0 +1,21 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Deploy
+
+# Controls when the action will run.
+on:
+  release:
+    types: [created]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  publih:
+    name: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Checkout & set Environment Variables
+        uses: ./.github/actions/checkout
+        with:
+          file: ./.github/variables/.env

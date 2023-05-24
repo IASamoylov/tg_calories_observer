@@ -77,6 +77,12 @@ jobs:
     needs: push
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
       - name: Deploy beta
         id: deploy-sls-container
         uses: yc-actions/yc-sls-container-deploy@v2
