@@ -60,7 +60,7 @@ func ready(w http.ResponseWriter, _ *http.Request) {
 		Message: "[BOT] Web server started",
 	})
 	if err != nil {
-		log.Println(fmt.Sprintf("an error occurred while writing response: %s ", err))
+		log.Println(fmt.Sprintf("an error occurred while writing response: %s :)", err))
 	}
 	w.WriteHeader(http.StatusOK)
 }
