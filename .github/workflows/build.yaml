@@ -23,7 +23,7 @@ jobs:
       - name: Set Environment Variables
         uses: ./.github/actions/set_environment_variables
         with:
-          file: ./.github/variables/.env
+          file: ./.build/.env
       - name: Setup Golang with cache
         uses: magnetikonline/action-golang-cache@v4
         with:
@@ -56,7 +56,7 @@ jobs:
       - name: Set Environment Variables
         uses: ./.github/actions/set_environment_variables
         with:
-          file: ./.github/variables/.env
+          file: ./.build/.env
       - name: Login to Yandex Cloud Container Registry
         id: login-cr
         uses: yc-actions/yc-cr-login@v1
@@ -106,7 +106,7 @@ jobs:
       - name: Set Environment Variables
         uses: ./.github/actions/set_environment_variables
         with:
-          file: ./.github/variables/.env
+          file: ./.build/.env
       - name: Download test reports
         uses: actions/download-artifact@v3
         with:
@@ -134,7 +134,7 @@ jobs:
       - name: Set Environment Variables
         uses: ./.github/actions/set_environment_variables
         with:
-          file: ./.github/variables/.env
+          file: ./.build/.env
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GO_VERSION }}
