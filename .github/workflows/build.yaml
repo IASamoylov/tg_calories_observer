@@ -71,17 +71,10 @@ jobs:
 
   deploy:
     name: Deploy to Yandex Serverless Container
-<<<<<<< HEAD
     if: ${{ github.ref == 'ref/heads/mPain' || github.ref == 'ref/heads/beta' }}
     needs:
       - publish
       # - lint
-=======
-    if: ${{ github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta' }}
-    needs:
-      - publish
-      - lint
->>>>>>> cf8acc8 (-)
     runs-on: ubuntu-latest
     steps:
       - name: Setup Checkout
