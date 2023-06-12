@@ -84,7 +84,6 @@ jobs:
         with:
           file: ./.build/.env
       - name: Deploy BETA
-        if: ${{ github.ref == 'ref/heads/beta' }}
         id: deploy-sls-container
         uses: yc-actions/yc-sls-container-deploy@v2
         with:
