@@ -46,31 +46,31 @@ jobs:
             ${{ env.GO_TEST_REPORT }}
             ${{ env.GO_TEST_COVER_PROFILE }}
 
-  publish:
-    name: Publish image to Yandex Container Registry
-    needs: build
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && (github.ref == 'main' || github.ref_name == 'release/*' }}
-    steps:
-      - name: Setup Checkout
-        uses: actions/checkout@v3
-      - name: Set Environment Variables
-        uses: ./.github/actions/set_environment_variables
-        with:
-          file: ./.build/.env
-      - name: Login to Yandex Cloud Container Registry
-        id: login-cr
-        uses: yc-actions/yc-cr-login@v1
-        with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+  # publish:
+  #   name: Publish image to Yandex Container Registry
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event_name == 'push' && (github.ref == 'main' || github.ref_name == 'release/*' }}
+  #   steps:
+  #     - name: Setup Checkout
+  #       uses: actions/checkout@v3
+  #     - name: Set Environment Variables
+  #       uses: ./.github/actions/set_environment_variables
+  #       with:
+  #         file: ./.build/.env
+  #     - name: Login to Yandex Cloud Container Registry
+  #       id: login-cr
+  #       uses: yc-actions/yc-cr-login@v1
+  #       with:
+  #         yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
 
-      - name: Build, tag, and push image to Yandex Cloud Container Registry
-        env:
-          CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
-          APP_VERSION: ${{ env.GITHUB_SHA_SHORT }}
-        run: |
-          make build-docker
-          make push-docker
+  #     - name: Build, tag, and push image to Yandex Cloud Container Registry
+  #       env:
+  #         CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
+  #         APP_VERSION: ${{ env.GITHUB_SHA_SHORT }}
+  #       run: |
+  #         make build-docker
+  #         make push-docker
 
   # deploy:
   #   name: Deploy to Yandex Serverless Container
