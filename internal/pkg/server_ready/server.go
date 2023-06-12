@@ -2,6 +2,7 @@ package serverready
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -54,6 +55,12 @@ func (server *server) Close() error {
 }
 
 func ready(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(w).Encode(struct{ Message string }{
+		Message: "[BOT] Web server started",
+	})
+	if err != nil {
+		log.Println(fmt.Sprintf("an error occurred while writing response: %s :)", err))
+	}
 	w.WriteHeader(http.StatusOK)
 }
