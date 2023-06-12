@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"syscall"
@@ -12,7 +13,13 @@ import (
 
 func main() {
 	log.Println("start")
-	multicloser.AddGlobal(serverready.NewHTTPServer(":9090").Run())
+
+	port, ok := os.LookupEnv("PORT")
+	if !ok {
+		port = "9090"
+	}
+
+	multicloser.AddGlobal(serverready.NewHTTPServer(fmt.Sprintf(":%s", port)).Run())
 	graceful.Shutdown(multicloser.GetGlobalCloser(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	multicloser.WaitGlobal()

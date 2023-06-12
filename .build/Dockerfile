@@ -20,6 +20,4 @@ FROM gcr.io/distroless/static-debian11
 
 COPY --from=build  /app/build/calories-observer-telegram-bot /
 
-EXPOSE 9090
-
 CMD ["/calories-observer-telegram-bot"]
