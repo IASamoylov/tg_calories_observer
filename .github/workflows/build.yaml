@@ -68,36 +68,37 @@ jobs:
           make build-docker
           make push-docker
 
-  # deploy:
-  #   name: Deploy to Yandex Serverless Container
-  #   needs:
-  #     - publish
-  #     # - lint
-  #   env:
-  #     ENV_NAME: beta
-  #   environment: Beta
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Setup Checkout
-  #       uses: actions/checkout@v3
-  #     - name: Set Environment Variables
-  #       uses: ./.github/actions/set_environment_variables
-  #       with:
-  #         file: ./.build/.env
-  #     - name: Deploy ${{ env.ENV_NAME }}
-  #       id: deploy-sls-container
-  #       uses: yc-actions/yc-sls-container-deploy@v2
-  #       with:
-  #         yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-  #         container-name: ${{ env.APP_NAME }}-${{ env.ENV_NAME }}
-  #         folder-id: ${{ secrets.YA_SERVERLESS_CONTAINERS_ID }}
-  #         revision-service-account-id: ${{ secrets.YC_CICD_USER }}
-  #         revision-cores: 1
-  #         revision-memory: 128Mb
-  #         revision-core-fraction: 5
-  #         revision-concurrency: 1
-  #         revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.GITHUB_SHA_SHORT }}
-  #         revision-execution-timeout: 3
+  deploy:
+    name: Deploy to Yandex Serverless Container
+    needs:
+      - publish
+      - lint
+    env:
+      ENV_NAME: beta
+    environment: Beta
+    if: ${{ github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+      - name: Deploy ${{ env.ENV_NAME }}
+        id: deploy-sls-container
+        uses: yc-actions/yc-sls-container-deploy@v2
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+          container-name: ${{ env.APP_NAME }}-${{ env.ENV_NAME }}
+          folder-id: ${{ secrets.YA_SERVERLESS_CONTAINERS_ID }}
+          revision-service-account-id: ${{ secrets.YC_CICD_USER }}
+          revision-cores: 1
+          revision-memory: 128Mb
+          revision-core-fraction: 5
+          revision-concurrency: 1
+          revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.GITHUB_SHA_SHORT }}
+          revision-execution-timeout: 3
 
   reports:
     name: Go Test Report
