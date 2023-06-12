@@ -72,6 +72,7 @@ jobs:
   deploy:
     name: Deploy to Yandex Serverless Container
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
+    environment: Beta
     needs:
       - publish
       # - lint
