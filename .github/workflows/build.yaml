@@ -44,7 +44,7 @@ jobs:
 
   publish:
     name: Publish image to Yandex Container Registry
-    # if: ${{ github.ref == 'ref/heads/beta' }}
+    if: github.ref == 'ref/heads/beta'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -133,7 +133,7 @@ jobs:
 
   lint:
     name: Lint
-    if: ${{ github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta' }}
+    if: always() && (github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta')
     runs-on: ubuntu-latest
     steps:
       - name: Setup Checkout
