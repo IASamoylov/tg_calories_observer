@@ -7,11 +7,12 @@ on:
   push:
     branches:
       - main
-      - beta/*
+      - release/*
+      - dev/*
   pull_request:
     branches:
       - main
-      - beta/*
+      - release/*
 
 jobs:
   build:
@@ -45,11 +46,11 @@ jobs:
             ${{ env.GO_TEST_REPORT }}
             ${{ env.GO_TEST_COVER_PROFILE }}
 
-  push:
-    name: Push to Yandex Container Registry
+  publish:
+    name: Publish image to Yandex Container Registry
     needs: build
     runs-on: ubuntu-latest
-    # if: ${{ github.event_name == 'push' }}
+    # if: ${{ github.event_name == 'push' && (github.ref == 'main' || github.ref_name == 'release/*' }}
     steps:
       - name: Setup Checkout
         uses: actions/checkout@v3
@@ -73,8 +74,12 @@ jobs:
 
   deploy:
     name: Deploy to Yandex Serverless Container
+    needs:
+      - publish
+      # - lint
+    env:
+      ENV_NAME: beta
     environment: Beta
-    needs: push
     runs-on: ubuntu-latest
     steps:
       - name: Setup Checkout
@@ -83,12 +88,12 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
-      - name: Deploy beta
+      - name: Deploy ${{ env.ENV_NAME }}
         id: deploy-sls-container
         uses: yc-actions/yc-sls-container-deploy@v2
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-          container-name: ${{ env.APP_NAME }}
+          container-name: ${{ env.APP_NAME }}-${{ env.ENV_NAME }}
           folder-id: ${{ secrets.YA_SERVERLESS_CONTAINERS_ID }}
           revision-service-account-id: ${{ secrets.YC_CICD_USER }}
           revision-cores: 1
@@ -130,10 +135,10 @@ jobs:
           files: ${{ env.GO_TEST_COVER_PROFILE }}
           fail_ci_if_error: true
 
-  golangci:
+  lint:
     name: Lint
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'push' && (github.ref == 'main' || github.ref_name == 'release/*' }}
     steps:
       - name: Setup Checkout
         uses: actions/checkout@v3
