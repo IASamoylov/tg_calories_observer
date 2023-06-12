@@ -73,9 +73,6 @@ jobs:
     needs:
       - publish
       - lint
-    env:
-      ENV_NAME: beta
-    environment: Beta
     if: ${{ github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta' }}
     runs-on: ubuntu-latest
     steps:
@@ -85,12 +82,13 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
-      - name: Deploy ${{ env.ENV_NAME }}
+      - name: Deploy BETA
+        if: ${{ github.ref == 'ref/heads/beta' }}
         id: deploy-sls-container
         uses: yc-actions/yc-sls-container-deploy@v2
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-          container-name: ${{ env.APP_NAME }}-${{ env.ENV_NAME }}
+          container-name: ${{ env.APP_NAME }}-beta
           folder-id: ${{ secrets.YA_SERVERLESS_CONTAINERS_ID }}
           revision-service-account-id: ${{ secrets.YC_CICD_USER }}
           revision-cores: 1
