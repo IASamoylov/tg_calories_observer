@@ -54,6 +54,7 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
+
       - name: Login to Yandex Cloud Container Registry
         id: login-cr
         uses: yc-actions/yc-cr-login@v1
