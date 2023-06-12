@@ -44,9 +44,9 @@ jobs:
 
   publish:
     name: Publish image to Yandex Container Registry
+    if: ${{ github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta' }}
     needs: build
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta' }}
     steps:
       - name: Setup Checkout
         uses: actions/checkout@v3
@@ -54,6 +54,7 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
+
       - name: Login to Yandex Cloud Container Registry
         id: login-cr
         uses: yc-actions/yc-cr-login@v1
@@ -70,10 +71,10 @@ jobs:
 
   deploy:
     name: Deploy to Yandex Serverless Container
+    if: ${{ github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta' }}
     needs:
       - publish
       - lint
-    if: ${{ github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta' }}
     runs-on: ubuntu-latest
     steps:
       - name: Setup Checkout
@@ -132,8 +133,8 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ubuntu-latest
     if: ${{ github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta' }}
+    runs-on: ubuntu-latest
     steps:
       - name: Setup Checkout
         uses: actions/checkout@v3
