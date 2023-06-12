@@ -44,7 +44,7 @@ jobs:
 
   publish:
     name: Publish image to Yandex Container Registry
-    if: ${{ github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta' }}
+    if: ${{ github.ref == 'ref/heads/beta' }}
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -71,7 +71,7 @@ jobs:
 
   deploy:
     name: Deploy to Yandex Serverless Container
-    if: ${{ github.ref == 'ref/heads/mPain' || github.ref == 'ref/heads/beta' }}
+    if: ${{ github.ref == 'ref/heads/main' || github.ref == 'ref/heads/beta' }}
     needs:
       - publish
       # - lint
