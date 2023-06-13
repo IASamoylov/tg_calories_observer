@@ -10,7 +10,8 @@ import (
 	"time"
 )
 
-const handlerName string = "/ready"
+const readyHandlerName string = "/ready"
+const debugHandlerName string = "/debug"
 
 type server struct {
 	base http.Server
@@ -19,7 +20,8 @@ type server struct {
 // NewHTTPServer creates simple server with handler /ready, for check after run
 func NewHTTPServer(host string) *server {
 	mux := http.NewServeMux()
-	mux.HandleFunc(handlerName, ready)
+	mux.HandleFunc(readyHandlerName, ready)
+	mux.HandleFunc(debugHandlerName, debug)
 
 	return &server{
 		base: http.Server{
@@ -58,6 +60,23 @@ func ready(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(struct{ Message string }{
 		Message: "[BOT] Web server started",
+	})
+	if err != nil {
+		log.Println(fmt.Sprintf("an error occurred while writing response: %s :)", err))
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+type debugMessage struct {
+	Commit  string
+	Version string
+}
+
+func debug(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(w).Encode(debugMessage{
+		Version: "dev",
+		Commit:  "c3ed4883794c9930b5ac7e14400f6b6ca6dc7f9d",
 	})
 	if err != nil {
 		log.Println(fmt.Sprintf("an error occurred while writing response: %s :)", err))

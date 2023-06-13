@@ -18,6 +18,6 @@ RUN CGO_ENABLED=0 go build -ldflags="${APP_LDFLAGS}" -o=./build/calories-observe
 
 FROM gcr.io/distroless/static-debian11
 
-COPY --from=build  /app/build/calories-observer-telegram-bot /
+COPY --from=build  /app/build/calories-observer-telegram-bot .
 
 CMD ["/calories-observer-telegram-bot"]
