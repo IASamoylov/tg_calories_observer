@@ -71,12 +71,12 @@ build-docker:
 ## push-docker: push image to registry
 .PHONY: push-docker
 push-docker:
-	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${APP_VERSION}
+	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${APP_VERSION} 
 
 ## run-docker: run docker image with binding port 9090
 .PHONY: run-docker
 run-docker: build-docker
-	docker run -d ${APP_NAME}:${APP_VERSION}
+	docker run -p 9090:9090 --name ${APP_NAME} -d ${APP_NAME}:${APP_VERSION} 
 
 ## run: runs web server
 .PHONY: run
