@@ -70,6 +70,7 @@ jobs:
   deploy:
     name: Deploy to Yandex Serverless Container
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
+    permissions: write-all
     needs:
       - publish
       - lint
