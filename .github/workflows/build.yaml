@@ -81,18 +81,15 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
-      - name: Create tag
-        if: github.ref == 'refs/heads/main'
-        uses: actions/github-script@v5
+      - name: Create Release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/${{ steps.date.outputs.date }}',
-              sha: context.sha
-            })
+          tag_name: v${{ steps.date.outputs.date }}
+          release_name: Release v${{ steps.date.outputs.date }}
+          draft: false
+          prerelease: false
       - name: Deploy
         id: deploy-sls-container
         uses: yc-actions/yc-sls-container-deploy@v2
