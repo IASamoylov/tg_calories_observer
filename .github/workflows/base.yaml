@@ -44,7 +44,7 @@ jobs:
 
   lint:
     name: Lint
-    if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - name: Setup Checkout
@@ -87,16 +87,16 @@ jobs:
           make build-docker
           make push-docker
 
-  # deployment:
-  #   needs:
-  #     - build
-  #     - publish
-  #     - lint
-  #   strategy:
-  #     fail-fast: true
-  #     matrix:
-  #       target: [Beta, Production]
-  #   uses: ./.github/workflows/deploy.yml
-  #   with:
-  #     target: ${{ matrix.target }}
-  #   secrets: inherit
+  deployment:
+    name: Deploy
+    if: ${{ github.event_name == 'pull_request' }}
+    needs:
+      - publish
+    strategy:
+      fail-fast: true
+      matrix:
+        target: [Beta, Production]
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      target: ${{ matrix.target }}
+    secrets: inherit

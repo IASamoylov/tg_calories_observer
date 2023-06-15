@@ -39,7 +39,7 @@ jobs:
             ${{ env.GO_TEST_COVER_PROFILE }}
 
   reports:
-    name: Go Test Report
+    name: Test Report
     needs: build
     runs-on: ubuntu-latest
     steps:
