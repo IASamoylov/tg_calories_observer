@@ -99,4 +99,8 @@ jobs:
     uses: ./.github/workflows/deploy.yaml
     with:
       target: ${{ matrix.target }}
+      tag: ${{ env.GITHUB_SHA_SHORT }}
+      revision-core-fraction: ${{ matrix.target == 'Beta' && 5 || 25 }}
+      suffix: ${{ matrix.target == 'Beta' && '-beta' || undefined }}
+      container-name: ${{ env.APP_NAME }}
     secrets: inherit
