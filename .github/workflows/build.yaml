@@ -82,6 +82,9 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y%m%d%H%M')"
       - name: Create Release
         uses: actions/create-release@latest
         env:
