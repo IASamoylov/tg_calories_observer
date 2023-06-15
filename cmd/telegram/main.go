@@ -6,9 +6,10 @@ import (
 	"os"
 	"syscall"
 
+	api "github.com/IASamoylov/tg_calories_observer/internal/api"
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/graceful"
 	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
-	serverready "github.com/IASamoylov/tg_calories_observer/internal/pkg/server_ready"
+	simpleserver "github.com/IASamoylov/tg_calories_observer/internal/pkg/simple_server"
 )
 
 func main() {
@@ -19,7 +20,10 @@ func main() {
 		port = "9090"
 	}
 
-	multicloser.AddGlobal(serverready.NewHTTPServer(fmt.Sprintf(":%s", port)).Run())
+	multicloser.AddGlobal(simpleserver.NewHTTPServer(
+		fmt.Sprintf(":%s", port),
+		api.GetHandlers()...,
+	).Run())
 	graceful.Shutdown(multicloser.GetGlobalCloser(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	multicloser.WaitGlobal()

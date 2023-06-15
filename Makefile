@@ -6,15 +6,29 @@ export
 LOCAL_BIN?=$(CURDIR)/bin
 CONTAINER_REGISTRY?=
 APP_VERSION?=dev
-# APP_LDFLAGS?="\"-s -w\""
-APP_LDFLAGS?=
+APP_TAG?=${APP_VERSION}
+
+# ==================================================================================== #
+# LDFLAGS ENVS
+# ==================================================================================== #
+APP_LDFLAGS_MODULE_NAME=${shell head -n 1 go.mod | cut -c 8-}
+APP_LDFLAGS=-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.AppName=${APP_NAME}'\
+			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.Version=${APP_VERSION}'\
+			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHA=${GITHUB_SHA}'\
+			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHAShort=${GITHUB_SHA_SHORT}'\
+			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.BuildedAt=$(shell date)'
+
+
+# ==================================================================================== #
+# TESTS ENVS
+# ==================================================================================== #
+
 
 GO_TEST_DIRECTORY:=./internal/...
 GO_TEST_COVER_PROFILE?=unit.coverage.out
 GO_TEST_REPORT?=unit.report.xml
 GO_TEST_COVER_EXCLUDE:=mocks|config
 
-export PATH:=$(PATH):$(LOCAL_BIN)
 
 # ==================================================================================== #
 # HELPERS
@@ -56,26 +70,29 @@ codegen:
 ## build: builds ./cmd/telegram/main.go to output ${LOCAL_BIN}/${BINARY_NAME}
 .PHONY: build
 build:
-	go build -o=${LOCAL_BIN}/${APP_NAME} ./cmd/telegram/main.go
+	CGO_ENABLED=0 go build -ldflags="${APP_LDFLAGS}" -o=${LOCAL_BIN}/${APP_NAME} ./cmd/telegram/main.go
 
 ## build-docker: builds docker image
 .PHONY: build-docker
 build-docker:
 	docker build \
-		--build-arg APP_LDFLAGS=${APP_LDFLAGS} \
+		--build-arg APP_LDFLAGS="${APP_LDFLAGS}" \
 		--build-arg GO_VERSION=${GO_VERSION} \
-		--tag ${CONTAINER_REGISTRY}${APP_NAME}:${APP_VERSION} \
+		--tag ${CONTAINER_REGISTRY}${APP_NAME}:${APP_TAG} \
 		--file .build/Dockerfile \
 		.
 
 ## push-docker: push image to registry
 .PHONY: push-docker
 push-docker:
+	docker tag ${CONTAINER_REGISTRY}${APP_NAME}:${APP_TAG} ${CONTAINER_REGISTRY}${APP_NAME}:${APP_VERSION} 
+	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${APP_TAG} 
 	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${APP_VERSION} 
 
 ## run-docker: run docker image with binding port 9090
 .PHONY: run-docker
 run-docker: build-docker
+	docker ps -aq --filter "name=${APP_NAME}" | xargs -r docker rm -f
 	docker run -p 9090:9090 --name ${APP_NAME} -d ${APP_NAME}:${APP_VERSION} 
 
 ## run: runs web server
