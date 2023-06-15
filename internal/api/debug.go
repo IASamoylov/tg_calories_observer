@@ -13,11 +13,11 @@ type debugHandler struct {
 }
 
 type debugMessage struct {
-	AppName        string
-	GithubSHA      string
-	GithubSHAShort string
-	Version        string
-	BuildedAt      string
+	AppName        string `json:"app_name"`
+	GithubSHA      string `json:"github_sha"`
+	GithubSHAShort string `json:"github_sha_short"`
+	Version        string `json:"version"`
+	BuildedAt      string `json:"builded_at"`
 }
 
 func (handler debugHandler) GetName() string {
