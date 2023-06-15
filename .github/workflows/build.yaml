@@ -81,6 +81,17 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
+      - name: Create tag
+        if: github.ref == 'refs/heads/main'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ steps.date.outputs.date }}',
+              sha: context.sha
+            })
       - name: Deploy
         id: deploy-sls-container
         uses: yc-actions/yc-sls-container-deploy@v2
@@ -95,24 +106,6 @@ jobs:
           revision-concurrency: 1
           revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.GITHUB_SHA_SHORT }}
           revision-execution-timeout: 3
-      - name: Creates next tag
-        if: github.ref == 'refs/heads/main'
-        id: create_tag
-        uses: mcpierce/github-commit-timestamp-tagger@master
-        with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          base_version: "v."
-      - name: Create tag
-        if: github.ref == 'refs/heads/main'
-        uses: actions/github-script@v5
-        with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/${{ steps.create_tag.outputs.tag_name }}',
-              sha: context.sha
-            })
 
   reports:
     name: Go Test Report
