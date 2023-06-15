@@ -37,6 +37,9 @@ jobs:
   build:
     uses: ./.github/workflows/build.yaml
     if: ${{ github.event_name == 'push' }}
+    permissions:
+      checks: write
+      pull-requests: write
     secrets: inherit
 
   lint:
