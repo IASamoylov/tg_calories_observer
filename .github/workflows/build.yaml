@@ -85,6 +85,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: actions/github-script@v5
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.rest.git.createRef({
               owner: context.repo.owner,
