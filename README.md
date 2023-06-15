@@ -1,1 +1,1 @@
-# tg_calories_observer
+# Telegram bot for calories observer

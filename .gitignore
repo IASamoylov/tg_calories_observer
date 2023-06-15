@@ -16,4 +16,13 @@
 
 bin
 
+unit.report.xml
+unit.coverage.out
+
 .trunk
+
+.DS_Store
+/.idea/.gitignore
+/.idea/modules.xml
+/.idea/tg_calories_observer.iml
+/.idea/vcs.xml

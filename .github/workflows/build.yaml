@@ -1,0 +1,167 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - beta
+      - dev
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+      - name: Setup Golang with cache
+        uses: magnetikonline/action-golang-cache@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Install gotestsum
+        run: go install gotest.tools/gotestsum@latest
+      - name: Build
+        run: make build
+      - name: Test
+        env:
+          LOCAL_BIN: ~/go/bin
+        run: make test
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.GO_TEST_ARTIFACT_NAME }}
+          path: |
+            ${{ env.GO_TEST_REPORT }}
+            ${{ env.GO_TEST_COVER_PROFILE }}
+
+  publish:
+    name: Publish image to Yandex Container Registry
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+      - name: Login to Yandex Cloud Container Registry
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v1
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
+      - name: Build, and push image to Yandex Cloud Container Registry
+        env:
+          CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
+        run: |
+          make build-docker
+          make push-docker
+
+  deploy:
+    name: Deploy to Yandex Serverless Container
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
+    needs:
+      - publish
+      - lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+      - name: Deploy
+        id: deploy-sls-container
+        uses: yc-actions/yc-sls-container-deploy@v2
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+          container-name: ${{ env.APP_NAME }}-${{env.APP_VERSION}}
+          folder-id: ${{ secrets.YA_SERVERLESS_FOLDER_ID }}
+          revision-service-account-id: ${{ secrets.YC_CICD_USER }}
+          revision-cores: 1
+          revision-memory: 128Mb
+          revision-core-fraction: ${{ env.REVISION_CORE_FRACTION }}
+          revision-concurrency: 1
+          revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.GITHUB_SHA_SHORT }}
+          revision-execution-timeout: 3
+      - name: Creates next tag
+        if: github.ref == 'refs/heads/main'
+        id: create_tag
+        uses: mcpierce/github-commit-timestamp-tagger@master
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          base_version: ""
+      - name: Create tag
+        if: github.ref == 'refs/heads/main'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ steps.create_tag.outputs.tag_name }}',
+              sha: context.sha
+            })
+
+  reports:
+    name: Go Test Report
+    needs: build
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      checks: write
+      pull-requests: write
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+      - name: Download test reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.GO_TEST_ARTIFACT_NAME }}
+      - name: Go Test Report
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Go Test Report
+          junit_files: ${{ env.GO_TEST_REPORT }}
+      - name: Go Test Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ env.GO_TEST_COVER_PROFILE }}
+          fail_ci_if_error: true
+
+  lint:
+    name: Lint
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest

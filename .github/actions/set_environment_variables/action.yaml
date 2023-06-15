@@ -1,0 +1,23 @@
+name: Set environment variables
+
+description: Configures environment variables for a workflow
+inputs:
+  file:
+    description: File path to variable file or directory
+    required: true
+runs:
+  using: composite
+  steps:
+    - run: |
+        echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-8)" >> $GITHUB_ENV
+        cat ${{ inputs.file }} >> ${GITHUB_ENV}
+      shell: bash
+    - run: |
+        if ${{ github.ref == 'refs/heads/beta' }}; then
+          echo "APP_VERSION=beta" >> $GITHUB_ENV
+          echo "REVISION_CORE_FRACTION=5" >> $GITHUB_ENV
+        else
+          echo "APP_VERSION=latest" >> $GITHUB_ENV
+          echo "REVISION_CORE_FRACTION=25" >> $GITHUB_ENV
+        fi
+      shell: bash
