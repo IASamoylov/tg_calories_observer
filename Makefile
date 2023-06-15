@@ -6,7 +6,7 @@ export
 LOCAL_BIN?=$(CURDIR)/bin
 CONTAINER_REGISTRY?=
 APP_VERSION?=dev
-APP_TAG?=${APP_VERSION}
+GITHUB_SHA_SHORT?=${APP_VERSION}
 
 # ==================================================================================== #
 # LDFLAGS ENVS
@@ -78,15 +78,15 @@ build-docker:
 	docker build \
 		--build-arg APP_LDFLAGS="${APP_LDFLAGS}" \
 		--build-arg GO_VERSION=${GO_VERSION} \
-		--tag ${CONTAINER_REGISTRY}${APP_NAME}:${APP_TAG} \
+		--tag ${CONTAINER_REGISTRY}${APP_NAME}:${GITHUB_SHA_SHORT} \
 		--file .build/Dockerfile \
 		.
 
 ## push-docker: push image to registry
 .PHONY: push-docker
 push-docker:
-	docker tag ${CONTAINER_REGISTRY}${APP_NAME}:${APP_TAG} ${CONTAINER_REGISTRY}${APP_NAME}:${APP_VERSION} 
-	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${APP_TAG} 
+	docker tag ${CONTAINER_REGISTRY}${APP_NAME}:${GITHUB_SHA_SHORT} ${CONTAINER_REGISTRY}${APP_NAME}:${APP_VERSION} 
+	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${GITHUB_SHA_SHORT} 
 	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${APP_VERSION} 
 
 ## run-docker: run docker image with binding port 9090

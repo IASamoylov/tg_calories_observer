@@ -47,8 +47,6 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
     needs: build
     runs-on: ubuntu-latest
-    env:
-      APP_TAG: ${{ env.GITHUB_SHA_SHORT }}
     steps:
       - name: Setup Checkout
         uses: actions/checkout@v3
