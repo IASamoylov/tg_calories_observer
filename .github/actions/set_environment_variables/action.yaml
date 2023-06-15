@@ -5,9 +5,6 @@ inputs:
   file:
     description: File path to variable file or directory
     required: true
-  ref:
-    description: Branch name
-    required: true
 runs:
   using: composite
   steps:
@@ -16,7 +13,7 @@ runs:
         cat ${{ inputs.file }} >> ${GITHUB_ENV}
       shell: bash
     - run: |
-        if ${{ github.ref }} == 'refs/heads/beta'; then
+        if ${{ github.ref }} == refs/heads/beta; then
           echo "APP_VERSION=beta" >> $GITHUB_ENV
           echo "REVISION_CORE_FRACTION=5" >> $GITHUB_ENV
         else
