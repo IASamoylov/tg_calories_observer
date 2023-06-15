@@ -101,7 +101,7 @@ jobs:
         uses: mcpierce/github-commit-timestamp-tagger@master
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          base_version: ""
+          base_version: "v."
       - name: Create tag
         if: github.ref == 'refs/heads/main'
         uses: actions/github-script@v5
