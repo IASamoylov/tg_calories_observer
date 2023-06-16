@@ -30,6 +30,7 @@ jobs:
     secrets: inherit
 
   automerge:
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - name: Get PR name
