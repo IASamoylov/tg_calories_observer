@@ -6,32 +6,7 @@ name: Build, Publish & Deploy
 on:
   push:
     branches:
-      - dev
-      - release
-      - feature/*
-  pull_request:
-    branches:
-      - main
-
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: "Log level"
-        required: true
-        default: "warning"
-        type: choice
-        options:
-          - info
-          - warning
-          - debug
-      tags:
-        description: "Test scenario tags"
-        required: false
-        type: boolean
-      environment:
-        description: "Environment to run tests against"
-        type: environment
-        required: true
+      - "*"
 
 jobs:
   build:
@@ -42,75 +17,51 @@ jobs:
       pull-requests: write
     secrets: inherit
 
-  lint:
-    name: Lint
-    if: ${{ github.event_name == 'pull_request' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Checkout
-        uses: actions/checkout@v3
-      - name: Set Environment Variables
-        uses: ./.github/actions/set_environment_variables
-        with:
-          file: ./.build/.env
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: false
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-
   publish:
-    name: Publish image to Yandex Container Registry
-    if: ${{ github.event_name == 'pull_request' }}
-    needs: build
-    runs-on: ubuntu-latest
-    outputs:
-      GITHUB_SHA_SHORT: ${{ steps.set_variables.outputs.GITHUB_SHA_SHORT }}
-      APP_NAME: ${{ steps.set_variables.outputs.APP_NAME }}
-    steps:
-      - name: Setup Checkout
-        uses: actions/checkout@v3
-      - name: Set Environment Variables
-        uses: ./.github/actions/set_environment_variables
-        with:
-          file: ./.build/.env
-      - name: Set Variables
-        id: set_variables
-        run: |
-          echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
-          echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
-          echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}"
-          echo "APP_NAME=${{env.APP_NAME}}"
-      - name: Login to Yandex Cloud Container Registry
-        id: login-cr
-        uses: yc-actions/yc-cr-login@v1
-        with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-
-      - name: Build and push image to Yandex Cloud Container Registry
-        env:
-          CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
-        run: |
-          make build-docker
-          make push-docker
+    name: Publish
+    uses: ./.github/workflows/publish.yaml
+    with:
+      ref: ${{ env.GITHUB_SHA }}
+    secrets: inherit
 
   deployment:
     name: Deploy
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.ref_name == 'release' || github.ref_name == 'release/*' }}
     needs:
       - publish
-    strategy:
-      fail-fast: true
-      matrix:
-        target: [Beta, Production]
     uses: ./.github/workflows/deploy.yaml
     with:
-      target: ${{ matrix.target }}
+      target: "Beta"
       tag: ${{ needs.publish.outputs.GITHUB_SHA_SHORT }}
-      revision-core-fraction: ${{ matrix.target == 'Beta' && 5 || 25 }}
-      suffix: ${{ matrix.target == 'Beta' && '-beta' || '' }}
+      revision-core-fraction: 5
+      suffix: "-beta"
       container-name: ${{ needs.publish.outputs.APP_NAME }}
     secrets: inherit
+
+  release:
+    name: Create relase
+    needs:
+      - build
+      - publish
+      - deployment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: ${{ github.GITHUB_ACTOR }}
+          minimum-approvals: 1
+          issue-title: "Approve before to close release"
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date -u +'%Y%m%d%H%M')"
+      - name: Create Release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: v${{ steps.date.outputs.date }}
+          release_name: Release v${{ steps.date.outputs.date }}
+          draft: false
+          prerelease: false
+          create-release: ${{ needs.publish.outputs.GITHUB_SHA_SHORT }}

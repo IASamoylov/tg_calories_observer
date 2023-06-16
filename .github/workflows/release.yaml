@@ -1,0 +1,30 @@
+name: Release ${{ github.ref_name }}
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  checkout:
+    name: Prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+
+  deployment:
+    name: Deploy
+    needs:
+      - checkout
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      target: "Production"
+      tag: ${{ needs.publish.outputs.GITHUB_SHA_SHORT }}
+      revision-core-fraction: 25
+      container-name: ${{ needs.publish.outputs.APP_NAME }}
+    secrets: inherit
