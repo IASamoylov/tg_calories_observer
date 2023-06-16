@@ -19,16 +19,16 @@ jobs:
 
   publish:
     name: Publish
+    needs: build
     uses: ./.github/workflows/publish.yaml
     with:
-      ref: ${{ env.GITHUB_SHA }}
+      ref: ${{ github.GITHUB_SHA }}
     secrets: inherit
 
   deployment:
     name: Deploy
     if: ${{ github.ref_name == 'release' || github.ref_name == 'release/*' }}
-    needs:
-      - publish
+    needs: publish
     uses: ./.github/workflows/deploy.yaml
     with:
       target: "Beta"
@@ -41,8 +41,6 @@ jobs:
   release:
     name: Create relase
     needs:
-      - build
-      - publish
       - deployment
     runs-on: ubuntu-latest
     steps:
