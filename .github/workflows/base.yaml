@@ -44,10 +44,13 @@ jobs:
       - deployment
     runs-on: ubuntu-latest
     steps:
+      - run: |
+          echo "${{ env.GITHUB_ACTOR }}"
+          echo "${{ github.GITHUB_ACTOR }}"
       - uses: trstringer/manual-approval@v1
         with:
           secret: ${{ github.TOKEN }}
-          approvers: ${{ env.GITHUB_ACTOR }}
+          approvers: ${{ GITHUB_ACTOR }}
           minimum-approvals: 1
           issue-title: "Approve before to close release"
       - name: Get current date
