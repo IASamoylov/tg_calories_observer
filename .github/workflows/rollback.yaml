@@ -1,4 +1,5 @@
 name: Rollback
+run-name: Rollback to {{ inputs.tag }}
 
 on:
   workflow_dispatch:
