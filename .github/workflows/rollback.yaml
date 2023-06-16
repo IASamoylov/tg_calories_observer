@@ -13,11 +13,13 @@ jobs:
     name: Check tag
     runs-on: ubuntu-latest
     steps:
+      - run: echo "🎉 release ref ${{ inputs.ref }}"
       - run: |
-          git tag -l | grep -q "${{ inputs.tag }}" || echo "::error::release tag {{ inputs.tag }} not found" && exit 1
+          git tag -l | grep -q "${{ inputs.tag }}" || echo "::error::release tag ${{ inputs.tag }} not found" && exit 1
 
   publish:
     name: Publish
+    needs: tag
     uses: ./.github/workflows/publish.yaml
     with:
       ref: ${{ inputs.tag }}

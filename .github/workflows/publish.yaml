@@ -25,6 +25,7 @@ jobs:
       GITHUB_SHA_SHORT: ${{ steps.set_image_tag.outputs.GITHUB_SHA_SHORT }}
       APP_NAME: ${{ steps.set_image_tag.outputs.APP_NAME }}
     steps:
+      - run: echo "🎉 publish ref ${{ inputs.ref }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
