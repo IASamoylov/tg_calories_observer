@@ -40,6 +40,7 @@ jobs:
 
   release:
     name: Create relase
+    permissions: write-all
     needs:
       - deployment
     runs-on: ubuntu-latest
