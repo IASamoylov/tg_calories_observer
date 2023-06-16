@@ -30,6 +30,7 @@ jobs:
     secrets: inherit
 
   automerge:
+    name: Automerge PR
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
@@ -49,3 +50,11 @@ jobs:
           MERGE_ERROR_FAIL: true
           PULL_REQUEST: ${{ steps.branch.outputs.PULL_REQUEST_NAME }}
           BASE_BRANCHES: "main"
+
+  release:
+    permissions: write-all
+    name: Create release fo tag ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release
+        uses: softprops/action-gh-release@v1
