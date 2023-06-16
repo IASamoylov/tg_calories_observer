@@ -68,8 +68,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     outputs:
-      commit: ${{ steps.variables.outputs.commit }}
-      service_name: ${{ steps.variables.outputs.service_name }}
+      GITHUB_SHA_SHORT: ${{ steps.variables.outputs.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ steps.variables.outputs.APP_NAME }}
     steps:
       - name: Setup Checkout
         uses: actions/checkout@v3
@@ -80,8 +80,8 @@ jobs:
       - name: Variables
         id: variables
         run: |
-          run: echo "commit=${{env.GITHUB_SHA_SHORT}}" >> "$GITHUB_OUTPUT"
-          run: echo "service_name=${{env.APP_NAME}}" >> "$GITHUB_OUTPUT"
+          run: echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
+          run: echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
       - name: Login to Yandex Cloud Container Registry
         id: login-cr
         uses: yc-actions/yc-cr-login@v1
