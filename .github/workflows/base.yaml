@@ -43,13 +43,8 @@ jobs:
     needs:
       - deployment
     runs-on: ubuntu-latest
+    environment: "Production"
     steps:
-      - uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ github.TOKEN }}
-          approvers: ${{ github.actor }}
-          minimum-approvals: 1
-          issue-title: "Approve before to close release"
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y%m%d%H%M')"
