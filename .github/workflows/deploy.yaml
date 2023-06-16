@@ -48,7 +48,7 @@ jobs:
         uses: yc-actions/yc-sls-container-deploy@v2
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-          container-name: ${{ inputs.container-name }}-${{ inputs.suffix }}
+          container-name: ${{ inputs.container-name }}${{ inputs.suffix }}
           folder-id: ${{ secrets.YA_SERVERLESS_FOLDER_ID }}
           revision-service-account-id: ${{ secrets.YC_CICD_USER }}
           revision-cores: 1
