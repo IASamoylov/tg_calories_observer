@@ -41,6 +41,7 @@ jobs:
       - run: echo "🎉 target evn ${{ inputs.target }}"
       - run: echo "% cores ${{ inputs.revision-core-fraction }}"
       - run: echo "release suffix ${{ inputs.suffix }}"
+      - run: echo "release tag ${{ inputs.tag }}"
 
       - name: Deploy
         uses: yc-actions/yc-sls-container-deploy@v2
