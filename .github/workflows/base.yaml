@@ -107,8 +107,8 @@ jobs:
     uses: ./.github/workflows/deploy.yaml
     with:
       target: ${{ matrix.target }}
-      tag: ${{ jobs.publish.outputs.commit }}
+      tag: ${{ needs.publish.outputs.commit }}
       revision-core-fraction: ${{ matrix.target == 'Beta' && 5 || 25 }}
       suffix: ${{ matrix.target == 'Beta' && '-beta' || '' }}
-      container-name: ${{ jobs.publish.outputs.service_name }}
+      container-name: ${{ needs.publish.outputs.service_name }}
     secrets: inherit
