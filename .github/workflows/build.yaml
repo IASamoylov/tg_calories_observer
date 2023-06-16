@@ -14,7 +14,7 @@ jobs:
       - run: |
           echo "${{ env.GITHUB_ACTOR }}"
           echo "${{ github.GITHUB_ACTOR }}"
-          echo "${{ GITHUB_ACTOR }}"
+          echo "$GITHUB_ACTOR"
       - name: Checkout
         uses: actions/checkout@v3
       - name: Set Environment Variables
