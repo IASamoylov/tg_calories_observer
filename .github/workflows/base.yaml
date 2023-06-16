@@ -84,12 +84,6 @@ jobs:
           echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
           echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}"
           echo "APP_NAME=${{env.APP_NAME}}"
-
-      - name: Check Variables
-        id: set_variables
-        run: |
-          echo "${{ steps.set_variables.outputs.GITHUB_SHA_SHORT }}"
-          echo "${{ steps.set_variables.outputs.APP_NAME }}"
       - name: Login to Yandex Cloud Container Registry
         id: login-cr
         uses: yc-actions/yc-cr-login@v1
