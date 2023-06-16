@@ -13,9 +13,11 @@ jobs:
     name: Check tag
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🎉 release ref ${{ inputs.ref }}"
+      - run: echo "🎉 release ref ${{ inputs.tag }}"
+      - run: git tag -l | grep -e "${{ inputs.tag }}"
+      - run: git tag -l | grep -e "v"
       - run: |
-          git tag -l | grep -q "${{ inputs.tag }}" || echo "::error::release tag ${{ inputs.tag }} not found" && exit 1
+          git tag -l | grep -e "${{ inputs.tag }}" || echo "::error::release tag ${{ inputs.tag }} not found" && exit 1
 
   publish:
     name: Publish
