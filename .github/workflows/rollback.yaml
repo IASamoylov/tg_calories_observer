@@ -14,11 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 release ref ${{ inputs.tag }}"
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - run: git tag -l | grep -e "v"
+      # - name: Checkout
+      #   uses: actions/checkout@v3
+      #   with:
+      #     fetch-depth: 0
+      # - run: git tag -l | grep -e "v"
       - name: Checkout
         uses: actions/checkout@v3
         with:
