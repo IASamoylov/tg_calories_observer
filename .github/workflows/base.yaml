@@ -41,6 +41,8 @@ jobs:
   release:
     name: Create relase
     permissions: write-all
+    env:
+      GITHUB_TOKEN: ${{ secret.MYPAT }}
     needs:
       - deployment
     runs-on: ubuntu-latest
@@ -52,8 +54,6 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y%m%d%H%M')"
       - name: Create tag
-        env:
-          GITHUB_TOKEN: ${{ secret.MYPAT }}
         run: |
           git tag v${{ steps.date.outputs.date }} ${{ github.GITHUB_SHA }}
           git push origin v${{ steps.date.outputs.date }}
