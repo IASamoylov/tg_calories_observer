@@ -18,9 +18,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: tags/${{ inputs.tag }}"
-      - run: git tag -l | grep -e "v"
-      - run: |
-          git tag -l | grep -e "${{ inputs.tag }}" || echo "::error::release tag ${{ inputs.tag }} not found" && exit 1
+          fetch-depth: 0
 
   publish:
     name: Publish
