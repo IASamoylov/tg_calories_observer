@@ -1,0 +1,36 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "release tag"
+        type: string
+        required: true
+
+jobs:
+  tag:
+    name: Check tag
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          git tag -l | grep -q "${{ inputs.tag }}" || echo "::error::release tag {{ inputs.tag }} not found" && exit 1
+
+  publish:
+    name: Publish
+    uses: ./.github/workflows/publish.yaml
+    with:
+      ref: ${{ inputs.tag }}
+    secrets: inherit
+
+  deployment:
+    name: Deploy
+    needs:
+      - publish
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      target: "Production"
+      tag: ${{ needs.publish.outputs.GITHUB_SHA_SHORT }}
+      revision-core-fraction: 25
+      container-name: ${{ needs.publish.outputs.APP_NAME }}
+    secrets: inherit
