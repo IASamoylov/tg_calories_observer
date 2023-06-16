@@ -13,8 +13,9 @@ jobs:
     name: Check tag
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
       - run: echo "🎉 release ref ${{ inputs.tag }}"
-      - run: git tag -l | grep -e "${{ inputs.tag }}"
       - run: git tag -l | grep -e "v"
       - run: |
           git tag -l | grep -e "${{ inputs.tag }}" || echo "::error::release tag ${{ inputs.tag }} not found" && exit 1
