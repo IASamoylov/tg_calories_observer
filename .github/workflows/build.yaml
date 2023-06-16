@@ -1,14 +1,10 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
-name: Build
+name: Build workflow
 
 on:
-  push:
-    branches:
-      - main
-      - beta
-      - dev
+  workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: true
 
 jobs:
   build:
@@ -42,81 +38,10 @@ jobs:
             ${{ env.GO_TEST_REPORT }}
             ${{ env.GO_TEST_COVER_PROFILE }}
 
-  publish:
-    name: Publish image to Yandex Container Registry
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Checkout
-        uses: actions/checkout@v3
-      - name: Set Environment Variables
-        uses: ./.github/actions/set_environment_variables
-        with:
-          file: ./.build/.env
-      - name: Login to Yandex Cloud Container Registry
-        id: login-cr
-        uses: yc-actions/yc-cr-login@v1
-        with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-
-      - name: Build, and push image to Yandex Cloud Container Registry
-        env:
-          CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
-        run: |
-          make build-docker
-          make push-docker
-
-  deploy:
-    name: Deploy to Yandex Serverless Container
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
-    permissions: write-all
-    needs:
-      - publish
-      - lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Checkout
-        uses: actions/checkout@v3
-      - name: Set Environment Variables
-        uses: ./.github/actions/set_environment_variables
-        with:
-          file: ./.build/.env
-      - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(date +'%Y%m%d%H%M')"
-      - name: Create Release
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-        with:
-          tag_name: v${{ steps.date.outputs.date }}
-          release_name: Release v${{ steps.date.outputs.date }}
-          draft: false
-          prerelease: false
-      - name: Deploy
-        id: deploy-sls-container
-        uses: yc-actions/yc-sls-container-deploy@v2
-        with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-          container-name: ${{ env.APP_NAME }}-${{env.APP_VERSION}}
-          folder-id: ${{ secrets.YA_SERVERLESS_FOLDER_ID }}
-          revision-service-account-id: ${{ secrets.YC_CICD_USER }}
-          revision-cores: 1
-          revision-memory: 128Mb
-          revision-core-fraction: ${{ env.REVISION_CORE_FRACTION }}
-          revision-concurrency: 1
-          revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.GITHUB_SHA_SHORT }}
-          revision-execution-timeout: 3
-
   reports:
-    name: Go Test Report
+    name: Test Report
     needs: build
     runs-on: ubuntu-latest
-    if: always()
-    permissions:
-      checks: write
-      pull-requests: write
     steps:
       - name: Setup Checkout
         uses: actions/checkout@v3
@@ -140,23 +65,3 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ env.GO_TEST_COVER_PROFILE }}
           fail_ci_if_error: true
-
-  lint:
-    name: Lint
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Checkout
-        uses: actions/checkout@v3
-      - name: Set Environment Variables
-        uses: ./.github/actions/set_environment_variables
-        with:
-          file: ./.build/.env
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: false
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest

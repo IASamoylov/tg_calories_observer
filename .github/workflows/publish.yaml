@@ -1,0 +1,51 @@
+name: Deployment workflow
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        description: Branch, tag or SHA
+    outputs:
+      GITHUB_SHA_SHORT:
+        value: ${{ jobs.publish.outputs.GITHUB_SHA_SHORT }}
+      APP_NAME:
+        value: ${{ jobs.publish.outputs.APP_NAME }}
+    secrets:
+      YC_SA_JSON_CREDENTIALS:
+        required: true
+      YC_CR_ID:
+        required: true
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    outputs:
+      GITHUB_SHA_SHORT: ${{ steps.set_image_tag.outputs.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ steps.set_image_tag.outputs.APP_NAME }}
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ""
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+      - name: Login to Yandex Cloud Container Registry
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v1
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+      - name: Build and push image to Yandex Cloud Container Registry
+        env:
+          CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
+        run: |
+          make build-docker
+          make push-docker
+      - name: Set image tag
+        id: set_image_tag
+        run: |
+          echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
+          echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT

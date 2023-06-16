@@ -1,0 +1,116 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Build, Publish & Deploy
+
+on:
+  push:
+    branches:
+      - dev
+      - release
+      - feature/*
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: "Log level"
+        required: true
+        default: "warning"
+        type: choice
+        options:
+          - info
+          - warning
+          - debug
+      tags:
+        description: "Test scenario tags"
+        required: false
+        type: boolean
+      environment:
+        description: "Environment to run tests against"
+        type: environment
+        required: true
+
+jobs:
+  build:
+    name: Build
+    uses: ./.github/workflows/build.yaml
+    permissions:
+      checks: write
+      pull-requests: write
+    secrets: inherit
+
+  lint:
+    name: Lint
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+
+  publish:
+    name: Publish image to Yandex Container Registry
+    if: ${{ github.event_name == 'pull_request' }}
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      GITHUB_SHA_SHORT: ${{ steps.set_variables.outputs.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ steps.set_variables.outputs.APP_NAME }}
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+      - name: Set Variables
+        id: set_variables
+        run: |
+          echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
+          echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
+          echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}"
+          echo "APP_NAME=${{env.APP_NAME}}"
+      - name: Login to Yandex Cloud Container Registry
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v1
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
+      - name: Build and push image to Yandex Cloud Container Registry
+        env:
+          CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
+        run: |
+          make build-docker
+          make push-docker
+
+  deployment:
+    name: Deploy
+    if: ${{ github.event_name == 'pull_request' }}
+    needs:
+      - publish
+    strategy:
+      fail-fast: true
+      matrix:
+        target: [Beta, Production]
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      target: ${{ matrix.target }}
+      tag: ${{ needs.publish.outputs.GITHUB_SHA_SHORT }}
+      revision-core-fraction: ${{ matrix.target == 'Beta' && 5 || 25 }}
+      suffix: ${{ matrix.target == 'Beta' && '-beta' || '' }}
+      container-name: ${{ needs.publish.outputs.APP_NAME }}
+    secrets: inherit

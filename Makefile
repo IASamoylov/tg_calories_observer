@@ -85,9 +85,7 @@ build-docker:
 ## push-docker: push image to registry
 .PHONY: push-docker
 push-docker:
-	docker tag ${CONTAINER_REGISTRY}${APP_NAME}:${GITHUB_SHA_SHORT} ${CONTAINER_REGISTRY}${APP_NAME}:${APP_VERSION} 
-	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${GITHUB_SHA_SHORT} 
-	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${APP_VERSION} 
+	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${GITHUB_SHA_SHORT}
 
 ## run-docker: run docker image with binding port 9090
 .PHONY: run-docker

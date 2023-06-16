@@ -1,0 +1,66 @@
+name: Deployment workflow
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: true
+        type: string
+      tag:
+        required: true
+        type: string
+      revision-core-fraction:
+        required: true
+        type: number
+      suffix:
+        required: false
+        type: string
+      container-name:
+        required: true
+        type: string
+    secrets:
+      YC_SA_JSON_CREDENTIALS:
+        required: true
+      YA_SERVERLESS_FOLDER_ID:
+        required: true
+      YC_CR_ID:
+        required: true
+      YC_CICD_USER:
+        required: true
+
+jobs:
+  deploy:
+    name: ${{ inputs.target }}
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.target }}
+
+    steps:
+      - run: echo "🎉 target evn ${{ inputs.target }}"
+      - run: echo "💀 % cores ${{ inputs.revision-core-fraction }}"
+      - run: echo "🤬 suffix ${{ inputs.suffix }}"
+      - run: echo "🖊️ container-name ${{ inputs.container-name }}"
+      - run: echo "📖 tag ${{ inputs.tag }}"
+
+      - name: Deploy
+        uses: yc-actions/yc-sls-container-deploy@v2
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+          container-name: ${{ inputs.container-name }}${{ inputs.suffix }}
+          folder-id: ${{ secrets.YA_SERVERLESS_FOLDER_ID }}
+          revision-service-account-id: ${{ secrets.YC_CICD_USER }}
+          revision-cores: 1
+          revision-memory: 128Mb
+          revision-core-fraction: ${{ inputs.revision-core-fraction }}
+          revision-concurrency: 1
+          revision-image-url: ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }}
+          revision-execution-timeout: 3
+
+      - name: Tag | latest
+        if: ${{ inputs.target == 'Production' }}
+        run: |
+          docker pull ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }}
+          docker tag ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }} ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:latest
+          docker push ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:latest
