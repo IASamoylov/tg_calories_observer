@@ -42,7 +42,7 @@ jobs:
     name: Create relase
     permissions: write-all
     env:
-      GITHUB_TOKEN: ${{ secret.MYPAT }}
+      GITHUB_TOKEN: ${{ secrets.MYPAT }}
     needs:
       - deployment
     runs-on: ubuntu-latest
