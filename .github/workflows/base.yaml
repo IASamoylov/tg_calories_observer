@@ -68,8 +68,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     outputs:
-      GITHUB_SHA_SHORT: ${{ steps.variables.outputs.GITHUB_SHA_SHORT }}
-      APP_NAME: ${{ steps.variables.outputs.APP_NAME }}
+      GITHUB_SHA_SHORT: ${{ steps.set_variables.outputs.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ steps.set_variables.outputs.APP_NAME }}
     steps:
       - name: Setup Checkout
         uses: actions/checkout@v3
@@ -77,11 +77,19 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
-      - name: Variables
-        id: variables
+      - name: Set Variables
+        id: set_variables
         run: |
           echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
           echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
+          echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}"
+          echo "APP_NAME=${{env.APP_NAME}}"
+
+      - name: Check Variables
+        id: set_variables
+        run: |
+          echo "${{ steps.set_variables.outputs.GITHUB_SHA_SHORT }}"
+          echo "${{ steps.set_variables.outputs.APP_NAME }}"
       - name: Login to Yandex Cloud Container Registry
         id: login-cr
         uses: yc-actions/yc-cr-login@v1
@@ -107,8 +115,8 @@ jobs:
     uses: ./.github/workflows/deploy.yaml
     with:
       target: ${{ matrix.target }}
-      tag: ${{ needs.publish.outputs.commit }}
+      tag: ${{ needs.publish.outputs.GITHUB_SHA_SHORT }}
       revision-core-fraction: ${{ matrix.target == 'Beta' && 5 || 25 }}
       suffix: ${{ matrix.target == 'Beta' && '-beta' || '' }}
-      container-name: ${{ needs.publish.outputs.service_name }}
+      container-name: ${{ needs.publish.outputs.APP_NAME }}
     secrets: inherit
