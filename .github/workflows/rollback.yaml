@@ -17,8 +17,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.tag }}"
           fetch-depth: 0
+      - run: git tag -l | grep -e "v"
 
   publish:
     name: Publish
