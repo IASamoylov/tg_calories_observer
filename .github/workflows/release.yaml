@@ -28,3 +28,23 @@ jobs:
       revision-core-fraction: 25
       container-name: ${{ needs.publish.outputs.APP_NAME }}
     secrets: inherit
+
+  automerge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get PR name
+        id: branch
+        run: |
+          echo PULL_REQUEST_NAME=$(git describe --all  --contains ${{github.GITHUB_SHA}}) >> $GITHUB_OUTPUT
+      - id: automerge
+        name: automerge
+        uses: "pascalgn/automerge-action@v0.15.6"
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          MERGE_COMMIT_MESSAGE: "pull request merged automatically"
+          MERGE_REQUIRED_APPROVALS: 1
+          MERGE_DELETE_BRANCH: true
+          MERGE_ERROR_FAIL: true
+          PULL_REQUEST: ${{ steps.branch.outputs.PULL_REQUEST_NAME }}
+          BASE_BRANCHES: "main"

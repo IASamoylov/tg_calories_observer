@@ -20,6 +20,7 @@ jobs:
   publish:
     name: Publish
     needs: build
+    if: ${{ github.ref_name == 'release' || github.ref_name == 'release/*' }}
     uses: ./.github/workflows/publish.yaml
     with:
       ref: ${{ github.GITHUB_SHA }}
@@ -27,7 +28,6 @@ jobs:
 
   deployment:
     name: Deploy
-    if: ${{ github.ref_name == 'release' || github.ref_name == 'release/*' }}
     needs: publish
     uses: ./.github/workflows/deploy.yaml
     with:
