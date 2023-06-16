@@ -80,8 +80,8 @@ jobs:
       - name: Variables
         id: variables
         run: |
-          echo "::set-output name=commit::$(env.GITHUB_SHA_SHORT)"
-          echo "::set-output name=service_name::$(env.APP_NAME)"
+          run: echo "commit=${{env.GITHUB_SHA_SHORT}}" >> "$GITHUB_OUTPUT"
+          run: echo "service_name=${{env.APP_NAME}}" >> "$GITHUB_OUTPUT"
       - name: Login to Yandex Cloud Container Registry
         id: login-cr
         uses: yc-actions/yc-cr-login@v1
