@@ -1,5 +1,5 @@
 name: Release
-run-name: Deploy to prod release {{ github.ref_name }}
+run-name: Deploy to prod release ${{ github.ref_name }}
 
 on:
   push:

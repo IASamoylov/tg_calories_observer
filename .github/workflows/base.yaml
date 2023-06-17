@@ -9,39 +9,39 @@ on:
       - "*"
 
 jobs:
-  # build:
-  #   name: Build
-  #   uses: ./.github/workflows/build.yaml
-  #   permissions:
-  #     checks: write
-  #     pull-requests: write
-  #   secrets: inherit
+  build:
+    name: Build
+    uses: ./.github/workflows/build.yaml
+    permissions:
+      checks: write
+      pull-requests: write
+    secrets: inherit
 
-  # publish:
-  #   name: Publish
-  #   needs: build
-  #   if: ${{ github.ref_name == 'release' || github.ref_name == 'release/*' }}
-  #   uses: ./.github/workflows/publish.yaml
-  #   with:
-  #     ref: ${{ github.GITHUB_SHA }}
-  #   secrets: inherit
+  publish:
+    name: Publish
+    needs: build
+    if: ${{ github.ref_name == 'release' || github.ref_name == 'release/*' }}
+    uses: ./.github/workflows/publish.yaml
+    with:
+      ref: ${{ github.GITHUB_SHA }}
+    secrets: inherit
 
-  # deployment:
-  #   name: Deploy
-  #   needs: publish
-  #   uses: ./.github/workflows/deploy.yaml
-  #   with:
-  #     target: "Beta"
-  #     tag: ${{ needs.publish.outputs.GITHUB_SHA_SHORT }}
-  #     revision-core-fraction: 5
-  #     suffix: "-beta"
-  #     container-name: ${{ needs.publish.outputs.APP_NAME }}
-  #   secrets: inherit
+  deployment:
+    name: Deploy
+    needs: publish
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      target: "Beta"
+      tag: ${{ needs.publish.outputs.GITHUB_SHA_SHORT }}
+      revision-core-fraction: 5
+      suffix: "-beta"
+      container-name: ${{ needs.publish.outputs.APP_NAME }}
+    secrets: inherit
 
   release:
     name: Create relase
     permissions: write-all
-    # needs: deployment
+    needs: deployment
     runs-on: ubuntu-latest
     environment: "Beta"
     steps:
@@ -55,3 +55,4 @@ jobs:
         with:
           github_token: ${{ secrets.GH_PAT }}
           custom_tag: ${{ steps.date.outputs.date }}
+          release_branches: release/*,release
