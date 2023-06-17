@@ -10,6 +10,9 @@ jobs:
   checkout:
     name: Prepare
     runs-on: ubuntu-latest
+    outputs:
+      GITHUB_SHA_SHORT: ${{ steps.set_image_tag.outputs.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ steps.set_image_tag.outputs.APP_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -17,6 +20,11 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
+      - name: Set image tag
+        id: set_image_tag
+        run: |
+          echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
+          echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
 
   deployment:
     name: Deploy
@@ -24,14 +32,15 @@ jobs:
     uses: ./.github/workflows/deploy.yaml
     with:
       target: "Production"
-      tag: ${{ needs.publish.outputs.GITHUB_SHA_SHORT }}
+      tag: ${{ needs.checkout.outputs.GITHUB_SHA_SHORT }}
       revision-core-fraction: 25
-      container-name: ${{ needs.publish.outputs.APP_NAME }}
+      container-name: ${{ needs.checkout.outputs.APP_NAME }}
     secrets: inherit
 
   automerge:
     name: Automerge PR
-    needs: deployment
+    needs:
+      - deployment
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
