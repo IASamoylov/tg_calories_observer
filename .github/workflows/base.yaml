@@ -7,6 +7,10 @@ on:
   push:
     branches:
       - "*"
+  pull_request:
+    branches:
+      - "release"
+      - "release/*"
 
 jobs:
   build:
@@ -20,16 +24,15 @@ jobs:
   publish:
     name: Publish
     needs: build
-    if: ${{ github.ref_name == 'release' || github.ref_name == 'release/*' }}
     uses: ./.github/workflows/publish.yaml
     with:
       ref: ${{ github.GITHUB_SHA }}
-      tag: ${{ github.ref_name == 'release' && 'beta' || github.ref_name == 'release/*' && 'beta' || '' }}
     secrets: inherit
 
   deployment:
     name: Deploy
     needs: publish
+    if: ${{ github.event_name == 'pull_request' }}
     uses: ./.github/workflows/deploy.yaml
     with:
       target: "Beta"
