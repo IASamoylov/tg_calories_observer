@@ -28,7 +28,7 @@ jobs:
 
   deployment:
     name: Deploy
-    if: ${{ github.ref_name == 'release' || github.ref_name == 'release/*' }}
+    if: ${{ github.ref_name == 'release' || github.ref_name == 'release/*' || github.ref_name == 'release/**' }}
     needs: publish
     uses: ./.github/workflows/deploy.yaml
     with:
