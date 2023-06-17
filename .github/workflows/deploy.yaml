@@ -57,14 +57,3 @@ jobs:
           revision-concurrency: 1
           revision-image-url: ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }}
           revision-execution-timeout: 3
-
-      - name: Tag | latest
-        if: ${{ inputs.target == 'Production' }}
-        run: |
-          docker login \
-            --username json_key \
-            --password ${{ secrets.YC_SA_JSON_CREDENTIALS }} \
-            cr.yandex       
-          docker pull ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }}
-          docker tag ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }} ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:latest
-          docker push ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:latest

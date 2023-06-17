@@ -24,6 +24,7 @@ jobs:
     uses: ./.github/workflows/publish.yaml
     with:
       ref: ${{ github.GITHUB_SHA }}
+      tag: ${{ github.ref_name == 'release' && 'beta' || github.ref_name == 'release/*' && 'beta' || '' }}
     secrets: inherit
 
   deployment:
