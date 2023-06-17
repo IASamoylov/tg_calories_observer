@@ -60,8 +60,6 @@ jobs:
 
       - name: Tag | latest
         if: ${{ inputs.target == 'Production' }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
         run: |
           docker login \
             --username json_key \
