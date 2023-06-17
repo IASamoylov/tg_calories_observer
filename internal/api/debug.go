@@ -33,7 +33,7 @@ func (handler debugHandler) Handle(w http.ResponseWriter, _ *http.Request) {
 		GithubSHA:      debug_config.GithubSHA,
 		GithubSHAShort: debug_config.GithubSHAShort,
 		BuildedAt:      debug_config.BuildedAt,
-		Message:        "dev-001",
+		Message:        "dev-002",
 	})
 	if err != nil {
 		log.Println(fmt.Sprintf("an error occurred while writing response: %s :)", err))
