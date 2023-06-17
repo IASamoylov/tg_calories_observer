@@ -28,7 +28,7 @@ jobs:
 
   publish:
     name: Publish
-    needs: build
+    needs: checkout
     uses: ./.github/workflows/publish.yaml
     with:
       ref: ${{ github.GITHUB_SHA }}
