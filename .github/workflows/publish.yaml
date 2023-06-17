@@ -51,8 +51,8 @@ jobs:
       - name: Add specific tag
         if: ${{ !!inputs.tag }}
         run: |
-          docker tag ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{env.GITHUB_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{inputs.tag}}
-          docker push ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{inputs.tag}}
+          docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.GITHUB_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{inputs.tag}}
+          docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{inputs.tag}}
       - name: Output tag
         id: output_tag
         run: |
