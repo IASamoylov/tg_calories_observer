@@ -1,4 +1,5 @@
 name: Rollback
+run-name: Rollback to {{ inputs.tag }}
 
 on:
   workflow_dispatch:
@@ -13,11 +14,16 @@ jobs:
     name: Check tag
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          git tag -l | grep -q "${{ inputs.tag }}" || echo "::error::release tag {{ inputs.tag }} not found" && exit 1
+      - run: echo "🎉 release ref ${{ inputs.tag }}"
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag }}
 
   publish:
     name: Publish
+    needs: tag
     uses: ./.github/workflows/publish.yaml
     with:
       ref: ${{ inputs.tag }}

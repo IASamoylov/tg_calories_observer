@@ -6,6 +6,9 @@ on:
       ref:
         type: string
         description: Branch, tag or SHA
+      tag:
+        type: string
+        description: Tag
     outputs:
       GITHUB_SHA_SHORT:
         value: ${{ jobs.publish.outputs.GITHUB_SHA_SHORT }}
@@ -22,9 +25,10 @@ jobs:
     name: Publish
     runs-on: ubuntu-latest
     outputs:
-      GITHUB_SHA_SHORT: ${{ steps.set_image_tag.outputs.GITHUB_SHA_SHORT }}
-      APP_NAME: ${{ steps.set_image_tag.outputs.APP_NAME }}
+      GITHUB_SHA_SHORT: ${{ steps.output_tag.outputs.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
     steps:
+      - run: echo "🎉 publish ref ${{ inputs.ref }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
@@ -44,8 +48,13 @@ jobs:
         run: |
           make build-docker
           make push-docker
-      - name: Set image tag
-        id: set_image_tag
+      - name: Add specific tag
+        if: ${{ !!inputs.tag }}
+        run: |
+          docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.GITHUB_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{inputs.tag}}
+          docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{inputs.tag}}
+      - name: Output tag
+        id: output_tag
         run: |
           echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
           echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT

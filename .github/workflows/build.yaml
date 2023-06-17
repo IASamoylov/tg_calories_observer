@@ -11,7 +11,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Checkout
+      - name: Checkout
         uses: actions/checkout@v3
       - name: Set Environment Variables
         uses: ./.github/actions/set_environment_variables
@@ -65,3 +65,22 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ env.GO_TEST_COVER_PROFILE }}
           fail_ci_if_error: true
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
