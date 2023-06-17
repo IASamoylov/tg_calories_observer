@@ -52,10 +52,6 @@ jobs:
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y%m%d%H%M')"
-      # - name: Create tag
-      #   run: |
-      #     git tag v${{ steps.date.outputs.date }} ${{ github.GITHUB_SHA }}
-      #     git push origin v${{ steps.date.outputs.date }}
       - name: Create tag
         uses: mathieudutour/github-tag-action@v6.1
         with:
