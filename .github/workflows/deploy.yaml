@@ -61,5 +61,6 @@ jobs:
       - name: Tag | latest
         if: ${{ inputs.target == 'Production' }}
         run: |
+          docker pull ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }}
           docker tag ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }} ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:latest
           docker push ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:latest
