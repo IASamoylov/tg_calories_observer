@@ -4,10 +4,9 @@
 name: Prepare release
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
-      - "release"
-      - "release/*"
+      - "main"
 
 jobs:
   build:
