@@ -41,14 +41,14 @@ jobs:
   release:
     name: Create relase
     permissions: write-all
-    env:
-      GITHUB_TOKEN: ${{ secrets.GH_PAT }}
     # needs: deployment
     runs-on: ubuntu-latest
     environment: "Beta"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_PAT }}
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y%m%d%H%M')"
