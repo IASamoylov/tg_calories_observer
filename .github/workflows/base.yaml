@@ -42,9 +42,8 @@ jobs:
     name: Create relase
     permissions: write-all
     env:
-      GITHUB_TOKEN: ${{ secrets.MYPAT }}
-    needs:
-      - deployment
+      GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+    # needs: deployment
     runs-on: ubuntu-latest
     environment: "Beta"
     steps:
