@@ -37,7 +37,9 @@ jobs:
 
   deployment:
     name: Deploy
-    needs: publish
+    needs:
+      - publish
+      - checkout
     uses: ./.github/workflows/deploy.yaml
     with:
       target: "Production"

@@ -18,6 +18,7 @@ type debugMessage struct {
 	GithubSHAShort string `json:"github_sha_short"`
 	Version        string `json:"version"`
 	BuildedAt      string `json:"builded_at"`
+	Message        string `json:"message"`
 }
 
 func (handler debugHandler) GetName() string {
@@ -32,6 +33,7 @@ func (handler debugHandler) Handle(w http.ResponseWriter, _ *http.Request) {
 		GithubSHA:      debug_config.GithubSHA,
 		GithubSHAShort: debug_config.GithubSHAShort,
 		BuildedAt:      debug_config.BuildedAt,
+		Message:        "dev-001",
 	})
 	if err != nil {
 		log.Println(fmt.Sprintf("an error occurred while writing response: %s :)", err))
