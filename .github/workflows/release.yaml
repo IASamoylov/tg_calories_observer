@@ -68,7 +68,7 @@ jobs:
   release:
     needs: automerge
     permissions: write-all
-    name: Create release fo tag ${{ github.ref_name }}
+    name: Create release for tag ${{ github.ref_name }}
     runs-on: ubuntu-latest
     steps:
       - name: Release
