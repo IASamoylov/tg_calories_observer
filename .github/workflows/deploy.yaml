@@ -60,7 +60,13 @@ jobs:
 
       - name: Tag | latest
         if: ${{ inputs.target == 'Production' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
+          docker login \
+            --username json_key \
+            --password ${{ secrets.YC_SA_JSON_CREDENTIALS }} \
+            cr.yandex       
           docker pull ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }}
           docker tag ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }} ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:latest
           docker push ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:latest
