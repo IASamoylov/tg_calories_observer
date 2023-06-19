@@ -69,6 +69,6 @@ jobs:
       target: ${{ inputs.environment }}
       tag: ${{ needs.publish.tag.GITHUB_SHA_SHORT }}
       suffix: ${{ inputs.environment == 'Beta' && 'beta' || ''  }}
-      revision-core-fraction: ${{ inputs.environment == 'Beta' && 5 || 25  }
+      revision-core-fraction: ${{ inputs.environment == 'Beta' && 5 || 25  }}
       container-name: ${{ needs.publish.tag.APP_NAME }}
     secrets: inherit
