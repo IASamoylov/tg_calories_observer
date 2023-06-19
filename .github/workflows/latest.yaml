@@ -9,6 +9,21 @@ on:
       - "main"
 
 jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_EXIST }}
+    env:
+      BUILD_SHA: ${{ !!'' && github.sha || '' }}
+    steps:
+      - run: |
+          echo "🎉 ref ${{ inputs.ref }}"
+          echo "🎉 build sha ${{ env.BUILD_SHA }}"
+          echo "🎉 github sha ${{ github.sha }}"
+          echo "🎉 github sha short $(echo $BUILD_SHA | cut -c 1-8)""
+          echo "BUILD_SHA_SHORT=$(echo $BUILD_SHA | cut -c 1-8)" >> $GITHUB_ENV
+
   build:
     name: Build
     uses: ./.github/workflows/build.yaml
