@@ -12,9 +12,14 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     steps:
-      - run: wc --help
-      - run: echo 'abc' | grep 'b' | wc -l
-
+      - name: Login to Yandex Cloud Container Registry
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v1
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+      - run: |
+          echo $(docker image ls)
+          echo $(docker image ls ${{ secrets.YC_CR_ID }})
   build:
     name: Build
     uses: ./.github/workflows/build.yaml
