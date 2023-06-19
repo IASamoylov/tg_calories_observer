@@ -6,7 +6,7 @@ name: Build pre-release & release
 on:
   push:
     branches:
-      - "main" # excludes master
+      - "main"
 
 jobs:
   build:
