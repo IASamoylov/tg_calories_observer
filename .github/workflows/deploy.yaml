@@ -20,8 +20,30 @@ on:
         required: true
 
 jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_EXIST }}
+    env:
+      GITHUB_SHA: ${{ inputs.ref && GITHUB_SHA || inputs.ref }}
+    steps:
+      - run: |
+          echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-8)" >> $GITHUB_ENV
+      - name: List images
+        id: iamge_list
+        uses: nikita-volkov/yc-cli.github-action@v1.0.0
+        with:
+          key: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+          args: container image list
+      - name: Image exist
+        id: iamge_exist
+        run: |
+          echo "IMAGE_EXIST=$(${{ steps.iamge_list.outputs.output }} | grep ${{ env.GITHUB_SHA_SHORT }} | wc -lc )" >> $GITHUB_OUTPUT
+
   publish:
     name: Publish
+    needs: prepare
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.target }}
@@ -49,18 +71,20 @@ jobs:
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
       - name: Build and push image to Yandex Cloud Container Registry
+        if: ${{ needs.prepare.outputs.IMAGE_EXIST == 0 }}
         env:
           CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
         run: |
           make build-docker
           make push-docker
       - name: Output tag
+        if: ${{ needs.prepare.outputs.IMAGE_EXIST == 0 }}
         id: output_tag
         run: |
           echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
           echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
       - name: Add specific tag
-        if: ${{ inputs.target == 'Production' }}
+        if: ${{ inputs.target == 'Production' && needs.prepare.outputs.IMAGE_EXIST == 0 }}
         run: |
           docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.GITHUB_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
           docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
