@@ -38,7 +38,7 @@ func NewHTTPServer(host string, handlers ...RegisterHandler) *SimpleHTTPServer {
 	}
 }
 
-// Start starts a new server in goroutine
+// Run starts a new server in goroutine
 func (server *SimpleHTTPServer) Run() {
 	go func() {
 		err := server.base.ListenAndServe()
