@@ -65,20 +65,22 @@ jobs:
 
   deploy:
     name: Deploy
-    needs: publish
+    needs:
+      - publish
     permissions:
       contents: none
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.target }}
     env:
-      GITHUB_SHA_SHORT: ${{ needs.publish.output.GITHUB_SHA_SHORT }}
-      APP_NAME: ${{ needs.publish.output.APP_NAME }}
+      GITHUB_SHA_SHORT: ${{ needs.publish.outputs.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ needs.publish.outputs.APP_NAME }}
     steps:
       - run: echo "🎉 target evn ${{ inputs.target }}"
       - run: echo "💀 % cores ${{ vars.YC_REVISION_CORE_FRACTION }}"
       - run: echo "🤬 suffix ${{ vars.YC_APP_NAME_SUFFIX }}"
       - run: echo "🖊️ service-name ${{ env.APP_NAME }}"
+      - run: echo "🖊️ service-name ${{ needs.publish.outputs.APP_NAME }}
       - run: echo "📖 tag ${{ inputs.tag }}"
 
       - name: Deploy
