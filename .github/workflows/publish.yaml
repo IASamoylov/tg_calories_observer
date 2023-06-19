@@ -6,13 +6,9 @@ on:
       ref:
         type: string
         description: Branch, tag or SHA
-      IS_LATEST:
-        type: boolean
-        description: Is latest build and push
-        default: false
-      APP_VERSION:
+      target:
+        required: true
         type: string
-        description: Tag
     secrets:
       YC_SA_JSON_CREDENTIALS:
         required: true
@@ -22,9 +18,10 @@ on:
 jobs:
   publish:
     name: Publish
+    environment: ${{ inputs.target }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🎉 publish ref ${{ inputs.ref }}"
+      - run: echo "🎉 publish ref ${{ !!inputs.ref && $GITHUB_SHA || inputs.ref }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
@@ -42,12 +39,11 @@ jobs:
       - name: Build and push image to Yandex Cloud Container Registry
         env:
           CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
-          APP_VERSION: ${{ inputs.APP_VERSION }}
         run: |
           make build-docker
           make push-docker
       - name: Add specific tag
-        if: ${{ inputs.IS_LATEST }}
+        if: ${{ inputs.target == 'Production' }}
         run: |
           docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.GITHUB_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
           docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest

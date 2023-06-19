@@ -17,12 +17,15 @@ jobs:
       pull-requests: write
     secrets: inherit
 
-  deploy:
+  deploy_beta:
     needs: build
-    strategy:
-      fail-fast: true
-      matrix:
-        target: [Beta, Production]
+    uses: ./.github/workflows/deploy_to.yaml
+    with:
+      environment: ${{ matrix.target }}
+    secrets: inherit
+
+  deploy_prod:
+    needs: deploy_beta
     uses: ./.github/workflows/deploy_to.yaml
     with:
       environment: ${{ matrix.target }}

@@ -52,15 +52,15 @@ jobs:
           echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
 
   publish:
-    name: Publish
+    name: Publish / ${{ inputs.environment }}
     needs: tag
     uses: ./.github/workflows/publish.yaml
     with:
-      ref: ${{ inputs.environment == 'Beta' && 'beta' || 'latest'  }}
+      target: ${{ inputs.environment }}
     secrets: inherit
 
   deployment:
-    name: Deploy to ${{ inputs.environment }}
+    name: Deploy / ${{ inputs.environment }}
     needs:
       - tag
       - publish
@@ -68,7 +68,5 @@ jobs:
     with:
       target: ${{ inputs.environment }}
       tag: ${{ needs.publish.tag.GITHUB_SHA_SHORT }}
-      suffix: ${{ inputs.environment == 'Beta' && 'beta' || ''  }}
-      revision-core-fraction: ${{ inputs.environment == 'Beta' && 5 || 25  }}
-      container-name: ${{ needs.publish.tag.APP_NAME }}
+      service-name: ${{ needs.publish.tag.APP_NAME }}
     secrets: inherit

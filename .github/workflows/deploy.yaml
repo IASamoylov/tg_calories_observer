@@ -9,13 +9,7 @@ on:
       tag:
         required: true
         type: string
-      revision-core-fraction:
-        required: true
-        type: number
-      suffix:
-        required: false
-        type: string
-      container-name:
+      service-name:
         required: true
         type: string
     secrets:
@@ -48,12 +42,12 @@ jobs:
         uses: yc-actions/yc-sls-container-deploy@v2
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-          container-name: ${{ inputs.container-name }}${{ inputs.suffix }}
+          container-name: ${{ inputs.service-name }}${{ env.YC_APP_NAME_SUFFIX }}
           folder-id: ${{ secrets.YA_SERVERLESS_FOLDER_ID }}
           revision-service-account-id: ${{ secrets.YC_CICD_USER }}
-          revision-cores: 1
-          revision-memory: 128Mb
-          revision-core-fraction: ${{ inputs.revision-core-fraction }}
-          revision-concurrency: 1
+          revision-cores: ${{ env.YC_REVISION_CORES }}
+          revision-memory: ${{ env.YC_REVISION_CORES }}
+          revision-core-fraction: ${{ env.YC_REVISION_MEMORY }}
+          revision-concurrency: ${{ env.YC_REVISION_CONCURRENCY }}
           revision-image-url: ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }}
           revision-execution-timeout: 3

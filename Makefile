@@ -5,18 +5,18 @@ export
 
 LOCAL_BIN?=$(CURDIR)/bin
 CONTAINER_REGISTRY?=
-APP_VERSION?=dev
-GITHUB_SHA_SHORT?=${APP_VERSION}
+BUILD_APP_VERSION?=dev
+GITHUB_SHA_SHORT?=${BUILD_APP_VERSION}
 
 # ==================================================================================== #
 # LDFLAGS ENVS
 # ==================================================================================== #
 APP_LDFLAGS_MODULE_NAME=${shell head -n 1 go.mod | cut -c 8-}
 APP_LDFLAGS=-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.AppName=${APP_NAME}'\
-			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.Version=${APP_VERSION}'\
+			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.Version=${BUILD_APP_VERSION}'\
 			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHA=${GITHUB_SHA}'\
 			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHAShort=${GITHUB_SHA_SHORT}'\
-			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.BuildedAt=$(shell date)'
+			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.BuildedAt=$(shell date -u)'
 
 
 # ==================================================================================== #
