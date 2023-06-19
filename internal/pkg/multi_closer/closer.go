@@ -9,20 +9,14 @@ import (
 
 //go:generate mockgen -destination=mocks/mocks.go -package=mocks io Closer
 
-// MultiCloser closes all resources that should be closed
-type MultiCloser interface {
-	io.Closer
-	Add(closers ...io.Closer)
-	Wait()
-}
-
-var globalCloser MultiCloser
+var globalCloser *MultiCloser
 
 func init() {
 	SetGlobalCloser(New())
 }
 
-type multiCloser struct {
+// MultiCloser closes all resources that should be closed
+type MultiCloser struct {
 	mutex             sync.Mutex
 	once              sync.Once
 	closers           []io.Closer
@@ -30,19 +24,19 @@ type multiCloser struct {
 }
 
 // New creates a new multi closer
-func New() MultiCloser {
-	return &multiCloser{
+func New() *MultiCloser {
+	return &MultiCloser{
 		allResourceClosed: make(chan struct{}),
 	}
 }
 
 // SetGlobalCloser set a new  multi closer
-func SetGlobalCloser(multiCloser MultiCloser) {
+func SetGlobalCloser(multiCloser *MultiCloser) {
 	globalCloser = multiCloser
 }
 
 // GetGlobalCloser get a global multi closer
-func GetGlobalCloser() MultiCloser {
+func GetGlobalCloser() *MultiCloser {
 	return globalCloser
 }
 
@@ -62,7 +56,7 @@ func WaitGlobal() {
 }
 
 // Add adds resource than need to close
-func (multiCloser *multiCloser) Add(closers ...io.Closer) {
+func (multiCloser *MultiCloser) Add(closers ...io.Closer) {
 	multiCloser.mutex.Lock()
 	defer multiCloser.mutex.Unlock()
 
@@ -70,7 +64,7 @@ func (multiCloser *multiCloser) Add(closers ...io.Closer) {
 }
 
 // Close all resources registered in global multi closer
-func (multiCloser *multiCloser) Close() (err error) {
+func (multiCloser *MultiCloser) Close() (err error) {
 	multiCloser.once.Do(func() {
 		defer close(multiCloser.allResourceClosed)
 
@@ -105,6 +99,6 @@ func (multiCloser *multiCloser) Close() (err error) {
 }
 
 // Wait waits for all resource are closed
-func (multiCloser *multiCloser) Wait() {
+func (multiCloser *MultiCloser) Wait() {
 	<-multiCloser.allResourceClosed
 }

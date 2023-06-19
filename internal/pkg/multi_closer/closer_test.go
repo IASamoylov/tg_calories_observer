@@ -15,8 +15,7 @@ import (
 // nolint
 func TestAdd(t *testing.T) {
 	t.Run("adds multiple closers", func(t *testing.T) {
-		globalCloser := &multiCloser{}
-		SetGlobalCloser(globalCloser)
+		SetGlobalCloser(New())
 
 		closer1 := mocks.NewMockCloser(gomock.NewController(t))
 		closer2 := mocks.NewMockCloser(gomock.NewController(t))
@@ -25,15 +24,14 @@ func TestAdd(t *testing.T) {
 		AddGlobal(closer1, closer2)
 		AddGlobal(closer3)
 
-		assert.ElementsMatch(t, globalCloser.closers, []io.Closer{closer1, closer2, closer3})
+		assert.ElementsMatch(t, GetGlobalCloser().closers, []io.Closer{closer1, closer2, closer3})
 	})
 
 	// nolint
 	t.Run("adding to the unique multi closer does not change the global", func(t *testing.T) {
-		globalCloser := &multiCloser{}
-		SetGlobalCloser(globalCloser)
+		SetGlobalCloser(New())
 
-		uniqueCloser := &multiCloser{}
+		uniqueCloser := New()
 
 		closer1 := mocks.NewMockCloser(gomock.NewController(t))
 		closer2 := mocks.NewMockCloser(gomock.NewController(t))
@@ -43,7 +41,7 @@ func TestAdd(t *testing.T) {
 		AddGlobal(closer3)
 
 		assert.ElementsMatch(t, uniqueCloser.closers, []io.Closer{closer1, closer2})
-		assert.ElementsMatch(t, globalCloser.closers, []io.Closer{closer3})
+		assert.ElementsMatch(t, GetGlobalCloser().closers, []io.Closer{closer3})
 	})
 }
 

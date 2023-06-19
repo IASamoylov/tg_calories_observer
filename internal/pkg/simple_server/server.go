@@ -10,12 +10,7 @@ import (
 )
 
 // SimpleHTTPServer HTTP server
-type SimpleHTTPServer interface {
-	Run()
-	Close() error
-}
-
-type server struct {
+type SimpleHTTPServer struct {
 	base http.Server
 }
 
@@ -26,14 +21,14 @@ type RegisterHandler interface {
 }
 
 // NewHTTPServer creates simple server
-func NewHTTPServer(host string, handlers ...RegisterHandler) *server {
+func NewHTTPServer(host string, handlers ...RegisterHandler) *SimpleHTTPServer {
 	mux := http.NewServeMux()
 
 	for _, handler := range handlers {
 		mux.HandleFunc(handler.GetName(), handler.Handle)
 	}
 
-	return &server{
+	return &SimpleHTTPServer{
 		base: http.Server{
 			Addr:              host,
 			WriteTimeout:      1 * time.Second,
@@ -44,7 +39,7 @@ func NewHTTPServer(host string, handlers ...RegisterHandler) *server {
 }
 
 // Start starts a new server in goroutine
-func (server *server) Run() {
+func (server *SimpleHTTPServer) Run() {
 	go func() {
 		err := server.base.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -56,7 +51,7 @@ func (server *server) Run() {
 }
 
 // Close stops server
-func (server *server) Close() error {
+func (server *SimpleHTTPServer) Close() error {
 	if err := server.base.Shutdown(context.Background()); err != nil {
 		return fmt.Errorf("an error occurred while executing http.Server.Shutdown: %s ", err)
 	}

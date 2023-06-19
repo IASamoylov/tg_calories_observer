@@ -15,8 +15,8 @@ import (
 type app struct {
 	handlers []simpleserver.RegisterHandler
 
-	closer     multicloser.MultiCloser
-	httpServer simpleserver.SimpleHTTPServer
+	closer     *multicloser.MultiCloser
+	httpServer *simpleserver.SimpleHTTPServer
 }
 
 // NewApp creates a new app with all dependecies
