@@ -1,5 +1,5 @@
-name: Rollback
-run-name: Rollback to {{ inputs.tag }}
+name: Release
+run-name: Release to ${{ inputs.environment }} of ${{ inputs.ref }}
 
 on:
   workflow_dispatch:

@@ -53,13 +53,13 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.GO_TEST_ARTIFACT_NAME }}
-      - name: Go Test Report
+      - name: Test Report
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          check_name: Go Test Report
+          check_name: Test Report
           junit_files: ${{ env.GO_TEST_REPORT }}
-      - name: Go Test Coverage
+      - name: Test Coverage
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
