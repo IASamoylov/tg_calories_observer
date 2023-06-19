@@ -43,11 +43,11 @@ jobs:
         with:
           SA_KEY: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
       - run: |
-          yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }}
+          yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }}
+          yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l
       - name: Image exist
         id: iamge_exist
         run: |
-          yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} -o
           echo "IMAGE_EXIST= $(yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l)" >> $GITHUB_OUTPUT
 
   publish:
