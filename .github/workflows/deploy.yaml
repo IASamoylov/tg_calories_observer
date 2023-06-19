@@ -26,10 +26,10 @@ jobs:
     outputs:
       IMAGE_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_EXIST }}
     env:
-      GITHUB_SHA: ${{ inputs.ref && $GITHUB_SHA || inputs.ref }}
+      BUILD_SHA: ${{ !!inputs.ref && $github.sha || inputs.ref }}
     steps:
       - run: |
-          echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-8)" >> $GITHUB_ENV
+          echo "BUILD_SHA_SHORT=$(echo $BUILD_SHA | cut -c 1-8)" >> $GITHUB_ENV
       - name: List images
         id: iamge_list
         uses: nikita-volkov/yc-cli.github-action@v1.0.0
@@ -39,7 +39,7 @@ jobs:
       - name: Image exist
         id: iamge_exist
         run: |
-          echo "IMAGE_EXIST=$(${{ steps.iamge_list.outputs.output }} | grep ${{ env.GITHUB_SHA_SHORT }} | wc -lc )" >> $GITHUB_OUTPUT
+          echo "IMAGE_EXIST=$(${{ steps.iamge_list.outputs.output }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -lc )" >> $GITHUB_OUTPUT
 
   publish:
     name: Publish
@@ -48,14 +48,14 @@ jobs:
     environment:
       name: ${{ inputs.target }}
     env:
-      GITHUB_SHA: ${{ inputs.ref && GITHUB_SHA || inputs.ref }}
+      BUILD_SHA: ${{ !!inputs.ref && github.sha || inputs.ref }}
       BUILD_APP_VERSION: ${{ vars.BUILD_APP_VERSION }}
     outputs:
-      GITHUB_SHA_SHORT: ${{ steps.output_tag.outputs.GITHUB_SHA_SHORT }}
+      BUILD_SHA_SHORT: ${{ steps.output_tag.outputs.BUILD_SHA_SHORT }}
       APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
     steps:
       - run: echo "🎉 ref ${{ inputs.ref }}"
-      - run: echo "🎉 sha ${{ GITHUB_SHA }}"
+      - run: echo "🎉 sha ${{ env.BUILD_SHA }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
@@ -81,12 +81,12 @@ jobs:
         if: ${{ needs.prepare.outputs.IMAGE_EXIST == 0 }}
         id: output_tag
         run: |
-          echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
+          echo "BUILD_SHA_SHORT=${{env.BUILD_SHA_SHORT}}" >> $GITHUB_OUTPUT
           echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
       - name: Add specific tag
         if: ${{ inputs.target == 'Production' && needs.prepare.outputs.IMAGE_EXIST == 0 }}
         run: |
-          docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.GITHUB_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
+          docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.BUILD_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
           docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
 
   deploy:
@@ -99,14 +99,14 @@ jobs:
     environment:
       name: ${{ inputs.target }}
     env:
-      GITHUB_SHA_SHORT: ${{ needs.publish.outputs.GITHUB_SHA_SHORT }}
+      BUILD_SHA_SHORT: ${{ needs.publish.outputs.BUILD_SHA_SHORT }}
       APP_NAME: ${{ needs.publish.outputs.APP_NAME }}
     steps:
       - run: echo "🎉 target evn ${{ inputs.target }}"
       - run: echo "💀 % cores ${{ vars.YC_REVISION_CORE_FRACTION }}"
       - run: echo "🤬 suffix ${{ vars.YC_APP_NAME_SUFFIX }}"
       - run: echo "🖊️ service-name ${{ env.APP_NAME }}"
-      - run: echo "📖 tag ${{ env.GITHUB_SHA_SHORT }}"
+      - run: echo "📖 tag ${{ env.BUILD_SHA_SHORT }}"
 
       - name: Deploy
         uses: yc-actions/yc-sls-container-deploy@v2
@@ -119,5 +119,5 @@ jobs:
           revision-memory: ${{ vars.YC_REVISION_MEMORY }}
           revision-core-fraction: ${{ vars.YC_REVISION_CORE_FRACTION }}
           revision-concurrency: ${{ vars.YC_REVISION_CONCURRENCY }}
-          revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.GITHUB_SHA_SHORT }}
+          revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.BUILD_SHA_SHORT }}
           revision-execution-timeout: 3

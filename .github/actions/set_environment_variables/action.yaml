@@ -5,12 +5,14 @@ inputs:
   file:
     description: File path to variable file or directory
     required: true
+  comit:
+    description: sha
+    required: true
 runs:
   using: composite
   steps:
     - run: |
-        echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-8)" >> $GITHUB_ENV
-        echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-8)" >> $GITHUB_OUTPUT
+        echo "BUILD_SHA_SHORT=$(echo inputs.comit | cut -c 1-8)" >> $GITHUB_ENV
+        echo "BUILD_SHA=${{ inputs.comit }}" >> $GITHUB_ENV
         cat ${{ inputs.file }} >> ${GITHUB_ENV}
-        cat ${{ inputs.file }} >> ${GITHUB_OUTPUT}
       shell: bash

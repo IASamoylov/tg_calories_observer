@@ -17,6 +17,7 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
+          comit: ${{ github.sha}}
       - name: Setup Golang with cache
         uses: magnetikonline/action-golang-cache@v4
         with:
@@ -49,6 +50,7 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
+          comit: ${{ github.sha}}
       - name: Download test reports
         uses: actions/download-artifact@v3
         with:
@@ -76,6 +78,7 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
+          comit: ${{ github.sha }}
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GO_VERSION }}
