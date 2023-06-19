@@ -20,9 +20,10 @@ on:
         required: true
 
 jobs:
-  prepare:
-    name: Prepare
+  publish:
+    name: Publish
     runs-on: ubuntu-latest
+    needs: prepare
     outputs:
       GITHUB_SHA_SHORT: ${{ steps.output_tag.outputs.GITHUB_SHA_SHORT }}
       APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
@@ -37,15 +38,6 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
-
-  publish:
-    name: Publish
-    runs-on: ubuntu-latest
-    needs: prepare
-    env:
-      GITHUB_SHA_SHORT: ${{ needs.publish.outpout.GITHUB_SHA_SHORT }}
-      APP_NAME: ${{ needs.publish.outpout.APP_NAME }}
-    steps:
       - name: Login to Yandex Cloud Container Registry
         id: login-cr
         uses: yc-actions/yc-cr-login@v1
@@ -65,9 +57,7 @@ jobs:
 
   deploy:
     name: Start
-    needs:
-      - publish
-      - prepare
+    needs: publish
     permissions:
       contents: none
     runs-on: ubuntu-latest
