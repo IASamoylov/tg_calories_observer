@@ -1,4 +1,4 @@
-name: Deploy to ${{ inputs.target }}
+name: Deploy to
 run-name: Release to ${{ inputs.target }} of ${{ inputs.ref }}
 
 on:
