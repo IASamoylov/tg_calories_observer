@@ -10,7 +10,6 @@ on:
 
 jobs:
   build:
-    name: Build
     uses: ./.github/workflows/build.yaml
     permissions:
       checks: write
@@ -33,7 +32,7 @@ jobs:
 
   release:
     name: Create relase
-    needs: deploy
+    needs: deploy_prod
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
