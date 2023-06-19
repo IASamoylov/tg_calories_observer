@@ -59,11 +59,15 @@ jobs:
     outputs:
       BUILD_SHA_SHORT: ${{ steps.output_tag.outputs.BUILD_SHA_SHORT }}
       APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
-      IMAGE_EXIST: ${{ !!needs.prepare.outputs.IMAGE_EXIST }}
+      IMAGE_EXIST: ${{ needs.prepare.outputs.IMAGE_EXIST == 1 }}
     steps:
       - run: echo "🎉 ref ${{ inputs.ref }}"
       - run: echo "🎉 sha ${{ env.BUILD_SHA }}"
       - run: echo "🎉 images is exist - ${{ env.IMAGE_EXIST }}"
+      - run: echo "🎉 ${{ needs.prepare.outputs.IMAGE_EXIST == 1 }}"
+      - run: echo "🎉 ${{ needs.prepare.outputs.IMAGE_EXIST == '1' }}"
+      - run: echo "🎉 ${{ !!needs.prepare.outputs.IMAGE_EXIST }}"
+      - run: echo "🎉 ${{ needs.prepare.outputs.IMAGE_EXIST }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
@@ -80,7 +84,7 @@ jobs:
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
       - name: Build and push image to Yandex Cloud Container Registry
-        if: ${{ env.IMAGE_EXIST }}
+        if: ${{ !env.IMAGE_EXIST }}
         run: |
           make build-docker
           make push-docker
@@ -90,7 +94,7 @@ jobs:
           echo "BUILD_SHA_SHORT=${{env.BUILD_SHA_SHORT}}" >> $GITHUB_OUTPUT
           echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
       - name: Add specific tag
-        if: ${{ inputs.target == 'Production' && env.IMAGE_EXIST }}
+        if: ${{ inputs.target == 'Production' && !env.IMAGE_EXIST }}
         run: |
           docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.BUILD_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
           docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
