@@ -15,7 +15,7 @@ jobs:
     outputs:
       IMAGE_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_EXIST }}
     env:
-      BUILD_SHA: ${{ '' && github.sha }}
+      BUILD_SHA: ${{ github.sha }}
     steps:
       - run: |
           echo "🎉 ref ${{ inputs.ref }}"
