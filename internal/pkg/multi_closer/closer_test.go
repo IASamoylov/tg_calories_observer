@@ -6,15 +6,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer/mocks"
 )
 
 // nolint
 func TestAdd(t *testing.T) {
 	t.Run("adds multiple closers", func(t *testing.T) {
-		SetGlobalCloser(New())
+		globalCloser := &multiCloser{}
+		SetGlobalCloser(globalCloser)
 
 		closer1 := mocks.NewMockCloser(gomock.NewController(t))
 		closer2 := mocks.NewMockCloser(gomock.NewController(t))
@@ -23,14 +25,15 @@ func TestAdd(t *testing.T) {
 		AddGlobal(closer1, closer2)
 		AddGlobal(closer3)
 
-		assert.ElementsMatch(t, GetGlobalCloser().closers, []io.Closer{closer1, closer2, closer3})
+		assert.ElementsMatch(t, globalCloser.closers, []io.Closer{closer1, closer2, closer3})
 	})
 
 	// nolint
 	t.Run("adding to the unique multi closer does not change the global", func(t *testing.T) {
-		SetGlobalCloser(New())
+		globalCloser := &multiCloser{}
+		SetGlobalCloser(globalCloser)
 
-		uniqueCloser := New()
+		uniqueCloser := &multiCloser{}
 
 		closer1 := mocks.NewMockCloser(gomock.NewController(t))
 		closer2 := mocks.NewMockCloser(gomock.NewController(t))
@@ -40,7 +43,7 @@ func TestAdd(t *testing.T) {
 		AddGlobal(closer3)
 
 		assert.ElementsMatch(t, uniqueCloser.closers, []io.Closer{closer1, closer2})
-		assert.ElementsMatch(t, GetGlobalCloser().closers, []io.Closer{closer3})
+		assert.ElementsMatch(t, globalCloser.closers, []io.Closer{closer3})
 	})
 }
 
