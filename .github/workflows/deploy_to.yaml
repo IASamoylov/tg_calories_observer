@@ -1,4 +1,4 @@
-name: Release / ${{ inputs.environment }}
+name: Release / ${{ inputs.target }}
 run-name: Release to ${{ inputs.environment }} of ${{ inputs.ref }}
 
 on:
@@ -56,7 +56,7 @@ jobs:
     needs: tag
     uses: ./.github/workflows/publish.yaml
     with:
-      target: ${{ inputs.environment }}
+      target: ${{ inputs.target }}
     secrets: inherit
 
   deployment:
@@ -66,7 +66,7 @@ jobs:
       - publish
     uses: ./.github/workflows/deploy.yaml
     with:
-      target: ${{ inputs.environment }}
+      target: ${{ inputs.target }}
       tag: ${{ needs.publish.tag.GITHUB_SHA_SHORT }}
       service-name: ${{ needs.publish.tag.APP_NAME }}
     secrets: inherit
