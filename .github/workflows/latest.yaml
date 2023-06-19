@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: wc --help
+      - run: echo 'abc' | grep 'b' | wc -l
 
   build:
     name: Build
