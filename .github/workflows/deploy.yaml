@@ -80,13 +80,13 @@ jobs:
       - run: echo "💀 % cores ${{ vars.YC_REVISION_CORE_FRACTION }}"
       - run: echo "🤬 suffix ${{ vars.YC_APP_NAME_SUFFIX }}"
       - run: echo "🖊️ service-name ${{ env.APP_NAME }}"
-      - run: echo "📖 tag ${{ inputs.tag }}"
+      - run: echo "📖 tag ${{ env.GITHUB_SHA_SHORT }}"
 
       - name: Deploy
         uses: yc-actions/yc-sls-container-deploy@v2
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-          container-name: ${{ env.APP_NAME }}${{ env.YC_APP_NAME_SUFFIX }}
+          container-name: ${{ env.APP_NAME }}${{ vars.YC_APP_NAME_SUFFIX }}
           folder-id: ${{ secrets.YA_SERVERLESS_FOLDER_ID }}
           revision-service-account-id: ${{ secrets.YC_CICD_USER }}
           revision-cores: ${{ vars.YC_REVISION_CORES }}
