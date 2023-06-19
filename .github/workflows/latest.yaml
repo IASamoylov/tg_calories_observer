@@ -16,9 +16,11 @@ jobs:
       IMAGE_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_EXIST }}
     env:
       BUILD_SHA: ${{ inputs.ref && github.sha }}
+      BUILD_SHA_TEST: ${{ inputs.ref && '124' || '421' }}
     steps:
       - run: |
           echo "🎉 ref ${{ inputs.ref }}"
+          echo "🎉 build sha test ${{ env.BUILD_SHA_TEST }}"
           echo "🎉 build sha ${{ env.BUILD_SHA }}"
           echo "🎉 github sha ${{ github.sha }}"
           echo "🎉 github sha short $(echo env.BUILD_SHA | cut -c 1-8)"
