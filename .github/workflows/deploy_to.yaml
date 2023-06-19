@@ -18,9 +18,6 @@ on:
 jobs:
   deployment:
     name: Deploy / ${{ inputs.target }}
-    needs:
-      - tag
-      - publish
     uses: ./.github/workflows/deploy.yaml
     with:
       target: ${{ inputs.target }}
