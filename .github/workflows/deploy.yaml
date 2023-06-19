@@ -30,6 +30,7 @@ jobs:
       APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
     steps:
       - run: echo "🎉 ref ${{ inputs.ref }}"
+      - run: echo "🎉 BUILD_APP_VERSION ${{ env.BUILD_APP_VERSION }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
