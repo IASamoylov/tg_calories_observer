@@ -9,6 +9,11 @@ on:
       - "main"
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - run: wc --help
+
   build:
     name: Build
     uses: ./.github/workflows/build.yaml
