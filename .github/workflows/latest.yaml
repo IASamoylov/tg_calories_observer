@@ -15,7 +15,7 @@ jobs:
     outputs:
       IMAGE_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_EXIST }}
     env:
-      BUILD_SHA: ${{ inputs.ref && github.sha || inputs.ref }}
+      BUILD_SHA: ${{ !!inputs.ref && inputs.ref || github.sha }}
       BUILD_SHA_TEST: ${{ inputs.ref && '124' || '421' }}
     steps:
       - run: |
