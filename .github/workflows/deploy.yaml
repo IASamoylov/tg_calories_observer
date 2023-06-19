@@ -32,7 +32,6 @@ jobs:
           echo "🎉 ref ${{ inputs.ref }}"
           echo "🎉 build sha ${{ env.BUILD_SHA }}"
           echo "🎉 github sha ${{ github.sha }}"
-          echo "🎉 github sha short $(echo $BUILD_SHA | cut -c 1-8)""
           echo "BUILD_SHA_SHORT=$(echo $BUILD_SHA | cut -c 1-8)" >> $GITHUB_ENV
       - name: List images
         id: iamge_list
