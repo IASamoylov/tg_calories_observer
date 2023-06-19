@@ -14,7 +14,7 @@ on:
 jobs:
   build:
     name: Build
-    uses: ./.github/workflows/reusable/build.yaml
+    uses: ./.github/workflows/build.yaml
     permissions:
       checks: write
       pull-requests: write

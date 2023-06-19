@@ -54,7 +54,7 @@ jobs:
   publish:
     name: Publish
     needs: tag
-    uses: ./.github/workflows/reusable/publish.yaml
+    uses: ./.github/workflows/publish.yaml
     with:
       ref: ${{ inputs.environment == 'Beta' && 'beta' || 'latest'  }}
     secrets: inherit
@@ -64,7 +64,7 @@ jobs:
     needs:
       - tag
       - publish
-    uses: ./.github/workflows/reusable/deploy.yaml
+    uses: ./.github/workflows/deploy.yaml
     with:
       target: ${{ inputs.environment }}
       tag: ${{ needs.publish.tag.GITHUB_SHA_SHORT }}
