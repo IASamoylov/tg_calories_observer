@@ -16,10 +16,26 @@ on:
         required: true
 
 jobs:
-  deployment:
-    name: ${{ inputs.target }}
-    uses: ./.github/workflows/deploy.yaml
-    with:
-      target: ${{ inputs.target }}
-      ref: ${{ inputs.ref }}
-    secrets: inherit
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_EXIST }}
+    env:
+      BUILD_SHA: ${{ !!inputs.ref && inputs.ref || github.sha }}
+      BUILD_SHA_TEST: ${{ inputs.ref && '124' || '421' }}
+    steps:
+      - run: |
+          echo "🎉 ref ${{ inputs.ref }}"
+          echo "🎉 build sha test ${{ env.BUILD_SHA_TEST }}"
+          echo "🎉 build sha ${{ env.BUILD_SHA }}"
+          echo "🎉 github sha ${{ github.sha }}"
+          echo "BUILD_SHA_SHORT=$(echo $BUILD_SHA | cut -c 1-8)" >> $GITHUB_ENV
+          echo "🎉 github sha short ${{env.BUILD_SHA_SHORT}}"
+  # deployment:
+  #   name: ${{ inputs.target }}
+  #   uses: ./.github/workflows/deploy.yaml
+  #   with:
+  #     target: ${{ inputs.target }}
+  #     ref: ${{ inputs.ref }}
+  #   secrets: inherit
