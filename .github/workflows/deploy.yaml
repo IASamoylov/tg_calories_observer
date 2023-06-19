@@ -52,16 +52,16 @@ jobs:
         run: |
           make build-docker
           make push-docker
-      - name: Add specific tag
-        if: ${{ inputs.target == 'Production' }}
-        run: |
-          docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.GITHUB_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
-          docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
       - name: Output tag
         id: output_tag
         run: |
           echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
           echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
+      - name: Add specific tag
+        if: ${{ inputs.target == 'Production' }}
+        run: |
+          docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.GITHUB_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
+          docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
 
   deploy:
     name: Deploy
@@ -76,9 +76,10 @@ jobs:
       APP_NAME: ${{ needs.publish.outpout.APP_NAME }}
     steps:
       - run: echo "🎉 target evn ${{ inputs.target }}"
-      - run: echo "💀 % cores ${{ inputs.revision-core-fraction }}"
-      - run: echo "🤬 suffix ${{ inputs.suffix }}"
+      - run: echo "💀 % cores ${{ vars.YC_REVISION_CORE_FRACTION }}"
+      - run: echo "🤬 suffix ${{ vars.YC_APP_NAME_SUFFIX }}"
       - run: echo "🖊️ service-name ${{ env.APP_NAME }}"
+      - run: echo "🖊️ service-name ${{ needs.publish.outpout.APP_NAME }}"
       - run: echo "📖 tag ${{ inputs.tag }}"
 
       - name: Deploy
