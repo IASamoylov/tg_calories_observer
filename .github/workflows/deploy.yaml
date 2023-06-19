@@ -72,14 +72,13 @@ jobs:
     environment:
       name: ${{ inputs.target }}
     env:
-      GITHUB_SHA_SHORT: ${{ needs.publish.outpout.GITHUB_SHA_SHORT }}
-      APP_NAME: ${{ needs.publish.outpout.APP_NAME }}
+      GITHUB_SHA_SHORT: ${{ needs.publish.output.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ needs.publish.output.APP_NAME }}
     steps:
       - run: echo "🎉 target evn ${{ inputs.target }}"
       - run: echo "💀 % cores ${{ vars.YC_REVISION_CORE_FRACTION }}"
       - run: echo "🤬 suffix ${{ vars.YC_APP_NAME_SUFFIX }}"
       - run: echo "🖊️ service-name ${{ env.APP_NAME }}"
-      - run: echo "🖊️ service-name ${{ needs.publish.outpout.APP_NAME }}"
       - run: echo "📖 tag ${{ inputs.tag }}"
 
       - name: Deploy
