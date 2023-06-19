@@ -1,0 +1,74 @@
+name: Release
+run-name: Release to ${{ inputs.environment }} of ${{ inputs.ref }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: >
+          The branch, tag or SHA to checkout, publish and deploy image. When checking out the repository that
+          triggered a workflow, this defaults to the reference or SHA for that
+          event. Otherwise, uses the default branch.
+        type: string
+      environment:
+        description: "Environment to deploy"
+        type: environment
+        required: true
+  workflow_call:
+    inputs:
+      ref:
+        description: >
+          The branch, tag or SHA to checkout, publish and deploy image. When checking out the repository that
+          triggered a workflow, this defaults to the reference or SHA for that
+          event. Otherwise, uses the default branch.
+        type: string
+      environment:
+        description: "Environment to deploy"
+        type: string
+        required: true
+
+jobs:
+  tag:
+    name: Check tag
+    runs-on: ubuntu-latest
+    outputs:
+      GITHUB_SHA_SHORT: ${{ steps.output_tag.outputs.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
+    steps:
+      - run: echo "🎉 release ref ${{ inputs.ref }}"
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref }}
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+      - name: Output tag
+        id: output_tag
+        run: |
+          echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
+          echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
+
+  publish:
+    name: Publish
+    needs: tag
+    uses: ./.github/workflows/publish.yaml
+    with:
+      ref: ${{ inputs.environment == 'Beta' && 'beta' || 'latest'  }}
+    secrets: inherit
+
+  deployment:
+    name: Deploy to ${{ inputs.environment }}
+    needs:
+      - tag
+      - publish
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      target: ${{ inputs.environment }}
+      tag: ${{ needs.publish.tag.GITHUB_SHA_SHORT }}
+      suffix: ${{ inputs.environment == 'Beta' && 'beta' || ''  }}
+      revision-core-fraction: ${{ inputs.environment == 'Beta' && 5 || 25  }
+      container-name: ${{ needs.publish.tag.APP_NAME }}
+    secrets: inherit

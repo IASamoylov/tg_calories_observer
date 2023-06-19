@@ -91,7 +91,7 @@ push-docker:
 .PHONY: run-docker
 run-docker: build-docker
 	docker ps -aq --filter "name=${APP_NAME}" | xargs -r docker rm -f
-	docker run -p 9090:9090 --name ${APP_NAME} -d ${APP_NAME}:${APP_VERSION} 
+	docker run -p 9090:9090 --name ${APP_NAME} -d ${APP_NAME}:${GITHUB_SHA_SHORT}
 
 ## run: runs web server
 .PHONY: run

@@ -6,14 +6,13 @@ on:
       ref:
         type: string
         description: Branch, tag or SHA
-      tag:
+      IS_LATEST:
+        type: boolean
+        description: Is latest build and push
+        default: false
+      APP_VERSION:
         type: string
         description: Tag
-    outputs:
-      GITHUB_SHA_SHORT:
-        value: ${{ jobs.publish.outputs.GITHUB_SHA_SHORT }}
-      APP_NAME:
-        value: ${{ jobs.publish.outputs.APP_NAME }}
     secrets:
       YC_SA_JSON_CREDENTIALS:
         required: true
@@ -24,15 +23,13 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
-    outputs:
-      GITHUB_SHA_SHORT: ${{ steps.output_tag.outputs.GITHUB_SHA_SHORT }}
-      APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
     steps:
       - run: echo "🎉 publish ref ${{ inputs.ref }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
-          ref: ""
+          fetch-depth: 0
+          ref: ${{ inputs.ref }}
       - name: Set Environment Variables
         uses: ./.github/actions/set_environment_variables
         with:
@@ -45,16 +42,12 @@ jobs:
       - name: Build and push image to Yandex Cloud Container Registry
         env:
           CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
+          APP_VERSION: ${{ inputs.APP_VERSION }}
         run: |
           make build-docker
           make push-docker
       - name: Add specific tag
-        if: ${{ !!inputs.tag }}
+        if: ${{ inputs.IS_LATEST }}
         run: |
-          docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.GITHUB_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{inputs.tag}}
-          docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{inputs.tag}}
-      - name: Output tag
-        id: output_tag
-        run: |
-          echo "GITHUB_SHA_SHORT=${{env.GITHUB_SHA_SHORT}}" >> $GITHUB_OUTPUT
-          echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
+          docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.GITHUB_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
+          docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest

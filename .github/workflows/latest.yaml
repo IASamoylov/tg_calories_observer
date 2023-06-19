@@ -1,0 +1,49 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Build pre-release & release
+
+on:
+  push:
+    branches:
+      - "main" # excludes master
+
+jobs:
+  build:
+    name: Build
+    uses: ./.github/workflows/build.yaml
+    permissions:
+      checks: write
+      pull-requests: write
+    secrets: inherit
+
+  deploy:
+    needs: build
+    strategy:
+      fail-fast: true
+      matrix:
+        target: [Beta, Production]
+    uses: ./.github/workflows/deploy_to.yml
+    with:
+      environment: ${{ matrix.target }}
+    secrets: inherit
+
+  release:
+    name: Create relase
+    needs: deploy
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Prepare release tag
+        id: prepease_release
+        run: echo "RELEASE_TAG=$(date -u +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT
+      - name: Create release for tag ${{ steps.prepease_release.outputs.RELEASE_TAG }}
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ steps.prepease_release.outputs.RELEASE_TAG }}
+          release_name: Release ${{ steps.prepease_release.outputs.RELEASE_TAG }}
+          prerelease: false
