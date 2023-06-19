@@ -17,7 +17,7 @@ on:
 
 jobs:
   deployment:
-    name: Deploy / ${{ inputs.target }}
+    name: ${{ inputs.target }}
     uses: ./.github/workflows/deploy.yaml
     with:
       target: ${{ inputs.target }}

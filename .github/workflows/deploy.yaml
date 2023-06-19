@@ -26,12 +26,14 @@ jobs:
     environment:
       name: ${{ inputs.target }}
     env:
+      GITHUB_SHA: ${{ inputs.ref && GITHUB_SHA || inputs.ref }}
       BUILD_APP_VERSION: ${{ vars.BUILD_APP_VERSION }}
     outputs:
       GITHUB_SHA_SHORT: ${{ steps.output_tag.outputs.GITHUB_SHA_SHORT }}
       APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
     steps:
       - run: echo "🎉 ref ${{ inputs.ref }}"
+      - run: echo "🎉 sha ${{ GITHUB_SHA }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
