@@ -10,7 +10,7 @@ on:
           triggered a workflow, this defaults to the reference or SHA for that
           event. Otherwise, uses the default branch.
         type: string
-      environment:
+      target:
         description: "Environment to deploy"
         type: environment
         required: true
@@ -22,7 +22,7 @@ on:
           triggered a workflow, this defaults to the reference or SHA for that
           event. Otherwise, uses the default branch.
         type: string
-      environment:
+      target:
         description: "Environment to deploy"
         type: string
         required: true
