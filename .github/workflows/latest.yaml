@@ -27,17 +27,14 @@ jobs:
         uses: yc-actions/yc-cr-login@v1
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-      - name: List images
-        id: iamge_list
-        uses: nikita-volkov/yc-cli.github-action@v1.0.1
+      - name: Try to install yc cli and login into yandex cloud
+        uses: okar1/yc-cli-install@master
         with:
-          key: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-          args: "container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }}"
+          SA_KEY: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
       - name: Image exist
         id: iamge_exist
         run: |
-          echo $(steps.iamge_list.outputs.output | wc --lines)
-          echo "IMAGE_EXIST= $(steps.iamge_list.outputs.output | wc --lines)" >> $GITHUB_OUTPUT
+          yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }}
   build:
     name: Build
     uses: ./.github/workflows/build.yaml
