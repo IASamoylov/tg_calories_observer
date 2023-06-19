@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+// SimpleHTTPServer HTTP server
+type SimpleHTTPServer interface {
+	Run()
+	Close() error
+}
+
 type server struct {
 	base http.Server
 }
@@ -38,7 +44,7 @@ func NewHTTPServer(host string, handlers ...RegisterHandler) *server {
 }
 
 // Start starts a new server in goroutine
-func (server *server) Run() *server {
+func (server *server) Run() {
 	go func() {
 		err := server.base.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -46,9 +52,7 @@ func (server *server) Run() *server {
 		}
 	}()
 
-	log.Println(fmt.Sprintf("Server stated on host %s", server.base.Addr))
-
-	return server
+	log.Println(fmt.Sprintf("HTTP server stated on host %s", server.base.Addr))
 }
 
 // Close stops server
