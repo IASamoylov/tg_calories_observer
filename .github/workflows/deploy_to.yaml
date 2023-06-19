@@ -1,5 +1,5 @@
 name: Release / ${{ inputs.target }}
-run-name: Release to ${{ inputs.environment }} of ${{ inputs.ref }}
+run-name: Release to ${{ inputs.target }} of ${{ inputs.ref }}
 
 on:
   workflow_dispatch:
