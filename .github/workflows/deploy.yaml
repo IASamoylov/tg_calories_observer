@@ -6,12 +6,9 @@ on:
       target:
         required: true
         type: string
-      tag:
-        required: true
+      ref:
         type: string
-      service-name:
-        required: true
-        type: string
+        description: Branch, tag or SHA
     secrets:
       YC_SA_JSON_CREDENTIALS:
         required: true
@@ -23,31 +20,79 @@ on:
         required: true
 
 jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      GITHUB_SHA_SHORT: ${{ steps.output_tag.outputs.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
+    steps:
+      - run: echo "🎉 ref ${{ !!inputs.ref && github.sha || inputs.ref }}"
+      - name: Setup Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref }}
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs: prepare
+    env:
+      GITHUB_SHA_SHORT: ${{ needs.publish.outpout.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ needs.publish.outpout.APP_NAME }}
+    steps:
+      - name: Login to Yandex Cloud Container Registry
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v1
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+      - name: Build and push image to Yandex Cloud Container Registry
+        env:
+          CONTAINER_REGISTRY: ${{ secrets.YC_CR_ID }}
+        run: |
+          make build-docker
+          make push-docker
+      - name: Add specific tag
+        if: ${{ inputs.target == 'Production' }}
+        run: |
+          docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.GITHUB_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
+          docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
+
   deploy:
     name: Start
+    needs:
+      - publish
+      - checkout
     permissions:
       contents: none
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.target }}
-
+    env:
+      GITHUB_SHA_SHORT: ${{ needs.publish.outpout.GITHUB_SHA_SHORT }}
+      APP_NAME: ${{ needs.publish.outpout.APP_NAME }}
     steps:
       - run: echo "🎉 target evn ${{ inputs.target }}"
       - run: echo "💀 % cores ${{ inputs.revision-core-fraction }}"
       - run: echo "🤬 suffix ${{ inputs.suffix }}"
-      - run: echo "🖊️ container-name ${{ inputs.container-name }}"
+      - run: echo "🖊️ service-name ${{ env.APP_NAME }}"
       - run: echo "📖 tag ${{ inputs.tag }}"
 
       - name: Deploy
         uses: yc-actions/yc-sls-container-deploy@v2
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-          container-name: ${{ inputs.service-name }}${{ env.YC_APP_NAME_SUFFIX }}
+          container-name: ${{ env.APP_NAME }}${{ env.YC_APP_NAME_SUFFIX }}
           folder-id: ${{ secrets.YA_SERVERLESS_FOLDER_ID }}
           revision-service-account-id: ${{ secrets.YC_CICD_USER }}
           revision-cores: ${{ env.YC_REVISION_CORES }}
           revision-memory: ${{ env.YC_REVISION_CORES }}
           revision-core-fraction: ${{ env.YC_REVISION_MEMORY }}
           revision-concurrency: ${{ env.YC_REVISION_CONCURRENCY }}
-          revision-image-url: ${{ secrets.YC_CR_ID }}${{ inputs.container-name }}:${{ inputs.tag }}
+          revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.GITHUB_SHA_SHORT }}
           revision-execution-timeout: 3

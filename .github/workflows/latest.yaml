@@ -20,7 +20,7 @@ jobs:
   deploy_beta:
     name: Deploy
     needs: build
-    uses: ./.github/workflows/deploy_to.yaml
+    uses: ./.github/workflows/deploy.yaml
     with:
       target: "Beta"
     secrets: inherit
@@ -28,7 +28,7 @@ jobs:
   deploy_prod:
     name: Deploy
     needs: deploy_beta
-    uses: ./.github/workflows/deploy_to.yaml
+    uses: ./.github/workflows/deploy.yaml
     with:
       target: "Production"
     secrets: inherit
