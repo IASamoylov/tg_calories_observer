@@ -9,63 +9,46 @@ on:
       - "main"
 
 jobs:
-  prepare:
-    name: Prepare
+  build:
+    name: Build
+    uses: ./.github/workflows/build.yaml
+    permissions:
+      checks: write
+      pull-requests: write
+    secrets: inherit
+
+  deploy_beta:
+    name: Beta
+    needs: build
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      target: "Beta"
+    secrets: inherit
+
+  deploy_prod:
+    name: Production
+    needs: deploy_beta
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      target: "Production"
+    secrets: inherit
+
+  release:
+    name: Create relase
+    needs: deploy_prod
+    permissions: write-all
     runs-on: ubuntu-latest
-    outputs:
-      IMAGE_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_EXIST }}
-    env:
-      BUILD_SHA: ${{ !!inputs.ref && inputs.ref || github.sha }}
-      BUILD_SHA_TEST: ${{ inputs.ref && '124' || '421' }}
     steps:
-      - run: |
-          echo "🎉 ref ${{ inputs.ref }}"
-          echo "🎉 build sha test ${{ env.BUILD_SHA_TEST }}"
-          echo "🎉 build sha ${{ env.BUILD_SHA }}"
-          echo "🎉 github sha ${{ github.sha }}"
-          echo "BUILD_SHA_SHORT=$(echo $BUILD_SHA | cut -c 1-8)" >> $GITHUB_ENV
-          echo "🎉 github sha short ${{env.BUILD_SHA_SHORT}}"
-
-  # build:
-  #   name: Build
-  #   uses: ./.github/workflows/build.yaml
-  #   permissions:
-  #     checks: write
-  #     pull-requests: write
-  #   secrets: inherit
-
-  # deploy_beta:
-  #   name: Beta
-  #   needs: build
-  #   uses: ./.github/workflows/deploy.yaml
-  #   with:
-  #     target: "Beta"
-  #   secrets: inherit
-
-  # deploy_prod:
-  #   name: Production
-  #   needs: deploy_beta
-  #   uses: ./.github/workflows/deploy.yaml
-  #   with:
-  #     target: "Production"
-  #   secrets: inherit
-
-  # release:
-  #   name: Create relase
-  #   needs: deploy_prod
-  #   permissions: write-all
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
-  #     - name: Prepare release tag
-  #       id: prepease_release
-  #       run: echo "RELEASE_TAG=$(date -u +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT
-  #     - name: Create release for tag v${{ steps.prepease_release.outputs.RELEASE_TAG }}
-  #       uses: actions/create-release@latest
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-  #       with:
-  #         tag_name: v${{ steps.prepease_release.outputs.RELEASE_TAG }}
-  #         release_name: Release v${{ steps.prepease_release.outputs.RELEASE_TAG }}
-  #         prerelease: false
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Prepare release tag
+        id: prepease_release
+        run: echo "RELEASE_TAG=$(date -u +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT
+      - name: Create release for tag v${{ steps.prepease_release.outputs.RELEASE_TAG }}
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: v${{ steps.prepease_release.outputs.RELEASE_TAG }}
+          release_name: Release v${{ steps.prepease_release.outputs.RELEASE_TAG }}
+          prerelease: false

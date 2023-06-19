@@ -26,7 +26,7 @@ jobs:
     outputs:
       IMAGE_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_EXIST }}
     env:
-      BUILD_SHA: ${{ !!inputs.ref && github.sha || inputs.ref }}
+      BUILD_SHA: ${{ !!inputs.ref && inputs.ref || github.sha }}
     steps:
       - run: |
           echo "🎉 ref ${{ inputs.ref }}"
@@ -43,7 +43,7 @@ jobs:
       - name: Image exist
         id: iamge_exist
         run: |
-          echo "IMAGE_EXIST=$(${{ steps.iamge_list.outputs.output }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -lc )" >> $GITHUB_OUTPUT
+          echo "IMAGE_EXIST=$(${{ steps.iamge_list.outputs.output }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l)" >> $GITHUB_OUTPUT
 
   publish:
     name: Publish
@@ -52,7 +52,7 @@ jobs:
     environment:
       name: ${{ inputs.target }}
     env:
-      BUILD_SHA: ${{ !!inputs.ref && github.sha || inputs.ref }}
+      BUILD_SHA: ${{ !!inputs.ref && inputs.ref || github.sha }}
       BUILD_APP_VERSION: ${{ vars.BUILD_APP_VERSION }}
     outputs:
       BUILD_SHA_SHORT: ${{ steps.output_tag.outputs.BUILD_SHA_SHORT }}
@@ -60,6 +60,7 @@ jobs:
     steps:
       - run: echo "🎉 ref ${{ inputs.ref }}"
       - run: echo "🎉 sha ${{ env.BUILD_SHA }}"
+      - run: echo "🎉 images is exist true/false ${{ needs.prepare.outputs.IMAGE_EXIST }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
@@ -69,6 +70,7 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
+          commit: ${{ env.BUILD_SHA }}
       - name: Login to Yandex Cloud Container Registry
         id: login-cr
         uses: yc-actions/yc-cr-login@v1
@@ -82,7 +84,6 @@ jobs:
           make build-docker
           make push-docker
       - name: Output tag
-        if: ${{ needs.prepare.outputs.IMAGE_EXIST == 0 }}
         id: output_tag
         run: |
           echo "BUILD_SHA_SHORT=${{env.BUILD_SHA_SHORT}}" >> $GITHUB_OUTPUT
