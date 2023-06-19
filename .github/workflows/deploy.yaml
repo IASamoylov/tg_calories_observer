@@ -67,7 +67,7 @@ jobs:
     name: Start
     needs:
       - publish
-      - checkout
+      - prepare
     permissions:
       contents: none
     runs-on: ubuntu-latest
