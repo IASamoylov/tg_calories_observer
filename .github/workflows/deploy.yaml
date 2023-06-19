@@ -42,13 +42,10 @@ jobs:
         uses: okar1/yc-cli-install@master
         with:
           SA_KEY: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-      - run: |
-          yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }}
-          yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l
       - name: Image exist
         id: iamge_exist
         run: |
-          echo "IMAGE_EXIST= $(yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l)" >> $GITHUB_OUTPUT
+          echo "IMAGE_EXIST=$(yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l)" >> $GITHUB_OUTPUT
 
   publish:
     name: Publish
@@ -66,6 +63,7 @@ jobs:
       - run: echo "🎉 ref ${{ inputs.ref }}"
       - run: echo "🎉 sha ${{ env.BUILD_SHA }}"
       - run: echo "🎉 images is exist true/false ${{ needs.prepare.outputs.IMAGE_EXIST }}"
+      - run: echo ${{needs.prepare.outputs.IMAGE_EXIST}}
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
@@ -82,7 +80,7 @@ jobs:
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
       - name: Build and push image to Yandex Cloud Container Registry
-        if: ${{ needs.prepare.outputs.IMAGE_EXIST == 0 }}}
+        if: ${{ needs.prepare.outputs.IMAGE_EXIST == '0' }}}
         run: |
           make build-docker
           make push-docker
@@ -92,7 +90,7 @@ jobs:
           echo "BUILD_SHA_SHORT=${{env.BUILD_SHA_SHORT}}" >> $GITHUB_OUTPUT
           echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
       - name: Add specific tag
-        if: ${{ inputs.target == 'Production' && needs.prepare.outputs.IMAGE_EXIST == 0 }}
+        if: ${{ inputs.target == 'Production' && needs.prepare.outputs.IMAGE_EXIST == '0' }}
         run: |
           docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.BUILD_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
           docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
