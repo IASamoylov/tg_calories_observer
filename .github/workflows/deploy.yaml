@@ -29,7 +29,7 @@ jobs:
       GITHUB_SHA_SHORT: ${{ steps.output_tag.outputs.GITHUB_SHA_SHORT }}
       APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
     steps:
-      - run: echo "🎉 ref ${{ !!inputs.ref && GITHUB_SHA || inputs.ref }}"
+      - run: echo "🎉 ref ${{ inputs.ref }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
