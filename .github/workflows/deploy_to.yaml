@@ -1,4 +1,4 @@
-name: Release / ${{ inputs.target }}
+name: Release
 run-name: Release to ${{ inputs.target }} of ${{ inputs.ref }}
 
 on:
