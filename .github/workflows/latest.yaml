@@ -10,6 +10,7 @@ on:
 
 jobs:
   build:
+    name: Build
     uses: ./.github/workflows/build.yaml
     permissions:
       checks: write
@@ -17,17 +18,19 @@ jobs:
     secrets: inherit
 
   deploy_beta:
+    name: Deploy
     needs: build
     uses: ./.github/workflows/deploy_to.yaml
     with:
-      environment: ${{ matrix.target }}
+      environment: "Beta"
     secrets: inherit
 
   deploy_prod:
+    name: Deploy
     needs: deploy_beta
     uses: ./.github/workflows/deploy_to.yaml
     with:
-      environment: ${{ matrix.target }}
+      environment: "Production"
     secrets: inherit
 
   release:

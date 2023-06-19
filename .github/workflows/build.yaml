@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: Go
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,7 +39,7 @@ jobs:
             ${{ env.GO_TEST_COVER_PROFILE }}
 
   reports:
-    name: Test Report
+    name: Report
     needs: build
     runs-on: ubuntu-latest
     steps:

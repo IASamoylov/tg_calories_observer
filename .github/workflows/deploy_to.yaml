@@ -1,4 +1,4 @@
-name: Release
+name: Release / ${{ inputs.environment }}
 run-name: Release to ${{ inputs.environment }} of ${{ inputs.ref }}
 
 on:
@@ -29,7 +29,7 @@ on:
 
 jobs:
   tag:
-    name: Check tag
+    name: Prepare
     runs-on: ubuntu-latest
     outputs:
       GITHUB_SHA_SHORT: ${{ steps.output_tag.outputs.GITHUB_SHA_SHORT }}
@@ -52,7 +52,7 @@ jobs:
           echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
 
   publish:
-    name: Publish / ${{ inputs.environment }}
+    name: Publish
     needs: tag
     uses: ./.github/workflows/publish.yaml
     with:
@@ -60,7 +60,7 @@ jobs:
     secrets: inherit
 
   deployment:
-    name: Deploy / ${{ inputs.environment }}
+    name: Deploy
     needs:
       - tag
       - publish
