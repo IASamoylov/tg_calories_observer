@@ -38,11 +38,11 @@ jobs:
         uses: nikita-volkov/yc-cli.github-action@v1.0.0
         with:
           key: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-          args: container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }}
+          args: container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l
       - name: Image exist
         id: iamge_exist
         run: |
-          echo "IMAGE_EXIST=$(${{ steps.iamge_list.outputs.output }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l)" >> $GITHUB_OUTPUT
+          echo "IMAGE_EXIST=${{ steps.iamge_list.outputs.output }}" >> $GITHUB_OUTPUT
 
   publish:
     name: Publish
