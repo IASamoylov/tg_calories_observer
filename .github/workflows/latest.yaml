@@ -10,16 +10,34 @@ on:
 
 jobs:
   prepare:
+    name: Prepare
     runs-on: ubuntu-latest
+    outputs:
+      IMAGE_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_EXIST }}
+    env:
+      BUILD_SHA: ${{ !!inputs.ref && inputs.ref || github.sha }}
     steps:
+      - run: |
+          echo "🎉 ref ${{ inputs.ref }}"
+          echo "🎉 build sha ${{ env.BUILD_SHA }}"
+          echo "🎉 github sha ${{ github.sha }}"
+          echo "BUILD_SHA_SHORT=$(echo $BUILD_SHA | cut -c 1-8)" >> $GITHUB_ENV
       - name: Login to Yandex Cloud Container Registry
         id: login-cr
         uses: yc-actions/yc-cr-login@v1
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-      - run: |
-          echo $(docker image ls)
-          echo $(docker image ls ${{ secrets.YC_CR_ID }})
+      - name: List images
+        id: iamge_list
+        uses: nikita-volkov/yc-cli.github-action@v1.0.1
+        with:
+          key: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+          args: "container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }}"
+      - name: Image exist
+        id: iamge_exist
+        run: |
+          echo $(steps.iamge_list.outputs.output | wc --lines)
+          echo "IMAGE_EXIST= $(steps.iamge_list.outputs.output | wc --lines)" >> $GITHUB_OUTPUT
   build:
     name: Build
     uses: ./.github/workflows/build.yaml
