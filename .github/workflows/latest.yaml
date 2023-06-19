@@ -18,7 +18,7 @@ jobs:
     secrets: inherit
 
   deploy_beta:
-    name: Deploy / Beta
+    name: Beta
     needs: build
     uses: ./.github/workflows/deploy.yaml
     with:
@@ -26,7 +26,7 @@ jobs:
     secrets: inherit
 
   deploy_prod:
-    name: Deploy / Beta
+    name: Production
     needs: deploy_beta
     uses: ./.github/workflows/deploy.yaml
     with:

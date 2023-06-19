@@ -23,11 +23,13 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.target }}
     outputs:
       GITHUB_SHA_SHORT: ${{ steps.output_tag.outputs.GITHUB_SHA_SHORT }}
       APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
     steps:
-      - run: echo "🎉 ref ${{ !!inputs.ref && github.sha || inputs.ref }}"
+      - run: echo "🎉 ref ${{ !!inputs.ref && GITHUB_SHA || inputs.ref }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
@@ -55,7 +57,7 @@ jobs:
           docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
 
   deploy:
-    name: Start
+    name: Deploy
     needs: publish
     permissions:
       contents: none
