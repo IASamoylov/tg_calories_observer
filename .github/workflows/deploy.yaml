@@ -35,7 +35,7 @@ jobs:
           echo "BUILD_SHA_SHORT=$(echo $BUILD_SHA | cut -c 1-8)" >> $GITHUB_ENV
       - name: List images
         id: iamge_list
-        uses: nikita-volkov/yc-cli.github-action@v1.0.0
+        uses: nikita-volkov/yc-cli.github-action@v1.0.1
         with:
           key: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
           args: container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l
