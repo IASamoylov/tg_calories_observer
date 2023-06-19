@@ -9,32 +9,6 @@ on:
       - "main"
 
 jobs:
-  prepare:
-    name: Prepare
-    runs-on: ubuntu-latest
-    outputs:
-      IMAGE_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_EXIST }}
-    env:
-      BUILD_SHA: ${{ !!inputs.ref && inputs.ref || github.sha }}
-    steps:
-      - run: |
-          echo "🎉 ref ${{ inputs.ref }}"
-          echo "🎉 build sha ${{ env.BUILD_SHA }}"
-          echo "🎉 github sha ${{ github.sha }}"
-          echo "BUILD_SHA_SHORT=$(echo $BUILD_SHA | cut -c 1-8)" >> $GITHUB_ENV
-      - name: Login to Yandex Cloud Container Registry
-        id: login-cr
-        uses: yc-actions/yc-cr-login@v1
-        with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-      - name: Try to install yc cli and login into yandex cloud
-        uses: okar1/yc-cli-install@master
-        with:
-          SA_KEY: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-      - name: Image exist
-        id: iamge_exist
-        run: |
-          yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }}
   build:
     name: Build
     uses: ./.github/workflows/build.yaml
