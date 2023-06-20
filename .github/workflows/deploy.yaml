@@ -29,7 +29,7 @@ jobs:
       BUILD_SHA: ${{ !!inputs.ref && inputs.ref || github.sha }}
       BUILD_APP_VERSION: ${{ vars.BUILD_APP_VERSION }}
     outputs:
-      BUILD_SHA_SHORT: ${{ steps.out put_tag.outputs.BUILD_SHA_SHORT }}
+      BUILD_SHA_SHORT: ${{ steps.output_tag.outputs.BUILD_SHA_SHORT }}
       APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
     steps:
       - run: echo "🎉 ref ${{ inputs.ref }}"
