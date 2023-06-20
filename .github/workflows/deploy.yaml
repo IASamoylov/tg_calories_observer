@@ -56,6 +56,7 @@ jobs:
       - name: Image exist
         id: iamge_exist
         run: |
+          echo $(yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }}
           echo "IMAGE_IS_EXIST=$(yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l)" >> $GITHUB_OUTPUT
       - run: echo "🎉 images is not exist - ${{ steps.iamge_exist.outputs.IMAGE_IS_EXIST }}"
       - run: echo "${{ steps.iamge_exist.outputs.IMAGE_IS_EXIST }}"
