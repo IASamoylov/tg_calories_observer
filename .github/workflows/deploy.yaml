@@ -22,7 +22,6 @@ on:
 jobs:
   publish:
     name: Publish
-    needs: prepare
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.target }}
