@@ -20,33 +20,6 @@ on:
         required: true
 
 jobs:
-  prepare:
-    name: Prepare
-    runs-on: ubuntu-latest
-    outputs:
-      IMAGE_IS_NOT_EXIST: ${{ steps.iamge_exist.outputs.IMAGE_IS_NOT_EXIST }}
-    env:
-      BUILD_SHA: ${{ !!inputs.ref && inputs.ref || github.sha }}
-    steps:
-      - run: |
-          echo "🎉 ref ${{ inputs.ref }}"
-          echo "🎉 build sha ${{ env.BUILD_SHA }}"
-          echo "🎉 github sha ${{ github.sha }}"
-          echo "BUILD_SHA_SHORT=$(echo $BUILD_SHA | cut -c 1-8)" >> $GITHUB_ENV
-      - name: Login to Yandex Cloud Container Registry
-        id: login-cr
-        uses: yc-actions/yc-cr-login@v1
-        with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-      - name: Try to install yc cli and login into yandex cloud
-        uses: okar1/yc-cli-install@master
-        with:
-          SA_KEY: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-      - name: Image exist
-        id: iamge_exist
-        run: |
-          echo "IMAGE_IS_NOT_EXIST=$(yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l)" >> $GITHUB_OUTPUT
-
   publish:
     name: Publish
     needs: prepare
@@ -59,11 +32,9 @@ jobs:
     outputs:
       BUILD_SHA_SHORT: ${{ steps.output_tag.outputs.BUILD_SHA_SHORT }}
       APP_NAME: ${{ steps.output_tag.outputs.APP_NAME }}
-      IMAGE_EXIST: ${{ needs.prepare.outputs.IMAGE_EXIST == 1 }}
     steps:
       - run: echo "🎉 ref ${{ inputs.ref }}"
       - run: echo "🎉 sha ${{ env.BUILD_SHA }}"
-      - run: echo "🎉 images is exist - ${{ !!needs.prepare.outputs.IMAGE_IS_NOT_EXIST }}"
       - name: Setup Checkout
         uses: actions/checkout@v3
         with:
@@ -79,6 +50,20 @@ jobs:
         uses: yc-actions/yc-cr-login@v1
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+      - name: Try to install yc cli and login into yandex cloud
+        uses: okar1/yc-cli-install@master
+        with:
+          SA_KEY: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+      - name: Image exist
+        id: iamge_exist
+        run: |
+          echo "IMAGE_IS_EXIST=$(yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l)" >> $GITHUB_OUTPUT
+      - run: echo "🎉 images is not exist - ${{ steps.iamge_exist.outputs.IMAGE_IS_EXIST }}"
+      - run: echo "${{ steps.iamge_exist.outputs.IMAGE_IS_EXIST }}"
+      - run: echo "${{ !steps.iamge_exist.outputs.IMAGE_IS_EXIST }}"
+      - run: echo "${{ !!steps.iamge_exist.outputs.IMAGE_IS_EXIST }}"
+      - run: echo "${{ steps.iamge_exist.outputs.IMAGE_IS_EXIST == 0 }}"
+      - run: echo "${{ steps.iamge_exist.outputs.IMAGE_IS_EXIST == 1 }}"
       - name: Build and push image to Yandex Cloud Container Registry
         if: ${{ !!needs.prepare.outputs.IMAGE_IS_NOT_EXIST }}
         run: |
