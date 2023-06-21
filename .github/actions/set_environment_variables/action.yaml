@@ -13,7 +13,7 @@ runs:
   steps:
     - run: |
         BUILD_SHA=${{ inputs.comit }}
-        echo "BUILD_SHA_SHORT=$(echo BUILD_SHA | cut -c 1-8)" >> $GITHUB_ENV
-        echo "BUILD_SHA=${{ inputs.comit }}" >> $GITHUB_ENV
+        echo "BUILD_SHA_SHORT=$(echo ${BUILD_SHA} | cut -c 1-8)" >> $GITHUB_ENV
+        echo "BUILD_SHA=${BUILD_SHA}" >> $GITHUB_ENV
         cat ${{ inputs.file }} >> ${GITHUB_ENV}
       shell: bash
