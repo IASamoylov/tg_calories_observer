@@ -6,7 +6,7 @@ export
 LOCAL_BIN?=$(CURDIR)/bin
 CONTAINER_REGISTRY?=
 BUILD_APP_VERSION?=dev
-GITHUB_SHA_SHORT?=${BUILD_APP_VERSION}
+BUILD_SHA_SHORT?=${BUILD_APP_VERSION}
 
 # ==================================================================================== #
 # LDFLAGS ENVS
@@ -14,8 +14,8 @@ GITHUB_SHA_SHORT?=${BUILD_APP_VERSION}
 APP_LDFLAGS_MODULE_NAME=${shell head -n 1 go.mod | cut -c 8-}
 APP_LDFLAGS=-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.AppName=${APP_NAME}'\
 			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.Version=${BUILD_APP_VERSION}'\
-			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHA=${GITHUB_SHA}'\
-			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHAShort=${GITHUB_SHA_SHORT}'\
+			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHA=${BUILD_SHA}'\
+			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHAShort=${BUILD_SHA_SHORT}'\
 			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.BuildedAt=$(shell date -u)'
 
 
@@ -78,20 +78,20 @@ build-docker:
 	docker build \
 		--build-arg APP_LDFLAGS="${APP_LDFLAGS}" \
 		--build-arg GO_VERSION=${GO_VERSION} \
-		--tag ${CONTAINER_REGISTRY}${APP_NAME}:${GITHUB_SHA_SHORT} \
+		--tag ${CONTAINER_REGISTRY}${APP_NAME}:${BUILD_SHA_SHORT} \
 		--file .build/Dockerfile \
 		.
 
 ## push-docker: push image to registry
 .PHONY: push-docker
 push-docker:
-	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${GITHUB_SHA_SHORT}
+	docker push ${CONTAINER_REGISTRY}${APP_NAME}:${BUILD_SHA_SHORT}
 
 ## run-docker: run docker image with binding port 9090
 .PHONY: run-docker
 run-docker: build-docker
 	docker ps -aq --filter "name=${APP_NAME}" | xargs -r docker rm -f
-	docker run -p 9090:9090 --name ${APP_NAME} -d ${APP_NAME}:${GITHUB_SHA_SHORT}
+	docker run -p 9090:9090 --name ${APP_NAME} -d ${APP_NAME}:${BUILD_SHA_SHORT}
 
 ## run: runs web server
 .PHONY: run
