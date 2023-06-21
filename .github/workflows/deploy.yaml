@@ -43,15 +43,15 @@ jobs:
         with:
           file: ./.build/.env
           commit: ${{ env.BUILD_SHA }}
+      - name: Try to install yc cli and login into yandex cloud
+        uses: okar1/yc-cli-install@master
+        with:
+          SA_KEY: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
       - name: Login to Yandex Cloud Container Registry
         id: login-cr
         uses: yc-actions/yc-cr-login@v1
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-      - name: Try to install yc cli and login into yandex cloud
-        uses: okar1/yc-cli-install@master
-        with:
-          SA_KEY: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
       - name: Image exist
         id: iamge_exist
         run: |
