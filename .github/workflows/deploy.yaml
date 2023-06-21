@@ -57,15 +57,17 @@ jobs:
           echo "IMAGE_IS_EXIST=$(yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l)" >> $GITHUB_OUTPUT
       - run: |
           echo "Build and push with arguments:"
+          echo "🎉 target evn : ${{ inputs.target }}"  >> log.txt
+          echo "💀 % cores : ${{ vars.YC_REVISION_CORE_FRACTION }}"  >> log.txt
+          echo "🤬 suffix : ${{ vars.YC_APP_NAME_SUFFIX }}" >> log.txt
           echo "ref : ${{ inputs.ref }}" >> log.txt
           echo "BUILD_SHA : ${{ env.BUILD_SHA }}"  >> log.txt
           echo "BUILD_SHA_SHORT : ${{ env.BUILD_SHA_SHORT }}"  >> log.txt
           echo "APP_NAME : ${{ env.APP_NAME }}" >> log.txt
           echo "IMAGE_IS_EXIST : ${{ steps.iamge_exist.outputs.IMAGE_IS_EXIST }}"  >> log.txt
-          echo "IMAGE_IS_EXIST as bool : ${{ !!steps.iamge_exist.outputs.IMAGE_IS_EXIST }}"  >> log.txt
           cat log.txt | sed -n 's/ //p' | column -t -s ':' | sed -e 's/^/ /'
       - name: Build and push image to Yandex Cloud Container Registry
-        if: ${{ !!steps.iamge_exist.outputs.IMAGE_IS_EXIST }}
+        if: ${{ steps.iamge_exist.outputs.IMAGE_IS_EXIST == 0 }}
         run: |
           make build-docker
           make push-docker
@@ -80,35 +82,29 @@ jobs:
           docker tag ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{env.BUILD_SHA_SHORT}} ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
           docker push ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:latest
 
-  # deploy:
-  #   name: Deploy
-  #   needs:
-  #     - publish
-  #   permissions:
-  #     contents: none
-  #   runs-on: ubuntu-latest
-  #   environment:
-  #     name: ${{ inputs.target }}
-  #   env:
-  #     BUILD_SHA_SHORT: ${{ needs.publish.outputs.BUILD_SHA_SHORT }}
-  #     APP_NAME: ${{ needs.publish.outputs.APP_NAME }}
-  #   steps:
-  #     - run: echo "🎉 target evn ${{ inputs.target }}"
-  #     - run: echo "💀 % cores ${{ vars.YC_REVISION_CORE_FRACTION }}"
-  #     - run: echo "🤬 suffix ${{ vars.YC_APP_NAME_SUFFIX }}"
-  #     - run: echo "🖊️ service-name ${{ env.APP_NAME }}"
-  #     - run: echo "📖 tag ${{ env.BUILD_SHA_SHORT }}"
-
-  #     - name: Deploy
-  #       uses: yc-actions/yc-sls-container-deploy@v2
-  #       with:
-  #         yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-  #         container-name: ${{ env.APP_NAME }}${{ vars.YC_APP_NAME_SUFFIX }}
-  #         folder-id: ${{ secrets.YA_SERVERLESS_FOLDER_ID }}
-  #         revision-service-account-id: ${{ secrets.YC_CICD_USER }}
-  #         revision-cores: ${{ vars.YC_REVISION_CORES }}
-  #         revision-memory: ${{ vars.YC_REVISION_MEMORY }}
-  #         revision-core-fraction: ${{ vars.YC_REVISION_CORE_FRACTION }}
-  #         revision-concurrency: ${{ vars.YC_REVISION_CONCURRENCY }}
-  #         revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.BUILD_SHA_SHORT }}
-  #         revision-execution-timeout: 3
+  deploy:
+    name: Deploy
+    needs:
+      - publish
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.target }}
+    env:
+      BUILD_SHA_SHORT: ${{ needs.publish.outputs.BUILD_SHA_SHORT }}
+      APP_NAME: ${{ needs.publish.outputs.APP_NAME }}
+    steps:
+      - name: Deploy
+        uses: yc-actions/yc-sls-container-deploy@v2
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+          container-name: ${{ env.APP_NAME }}${{ vars.YC_APP_NAME_SUFFIX }}
+          folder-id: ${{ secrets.YA_SERVERLESS_FOLDER_ID }}
+          revision-service-account-id: ${{ secrets.YC_CICD_USER }}
+          revision-cores: ${{ vars.YC_REVISION_CORES }}
+          revision-memory: ${{ vars.YC_REVISION_MEMORY }}
+          revision-core-fraction: ${{ vars.YC_REVISION_CORE_FRACTION }}
+          revision-concurrency: ${{ vars.YC_REVISION_CONCURRENCY }}
+          revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.BUILD_SHA_SHORT }}
+          revision-execution-timeout: 3
