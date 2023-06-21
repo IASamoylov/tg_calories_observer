@@ -12,7 +12,7 @@ runs:
   using: composite
   steps:
     - run: |
-        echo "BUILD_SHA_SHORT=$(echo inputs.comit | cut -c 1-8)" >> $GITHUB_ENV
+        echo "BUILD_SHA_SHORT=$(echo $inputs.comit | cut -c 1-8)" >> $GITHUB_ENV
         echo "BUILD_SHA=${{ inputs.comit }}" >> $GITHUB_ENV
         cat ${{ inputs.file }} >> ${GITHUB_ENV}
       shell: bash

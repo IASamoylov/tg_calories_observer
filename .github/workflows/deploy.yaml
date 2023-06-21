@@ -27,6 +27,7 @@ jobs:
       name: ${{ inputs.target }}
     env:
       BUILD_SHA: ${{ !!inputs.ref && inputs.ref || github.sha }}
+      BUILD_SHA_TEST: ${{ !!inputs.ref && '124' || '421' }}
       BUILD_APP_VERSION: ${{ vars.BUILD_APP_VERSION }}
     outputs:
       BUILD_SHA_SHORT: ${{ steps.output_tag.outputs.BUILD_SHA_SHORT }}
