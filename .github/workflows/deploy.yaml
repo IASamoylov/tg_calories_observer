@@ -47,11 +47,6 @@ jobs:
         uses: okar1/yc-cli-install@master
         with:
           SA_KEY: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-      - name: Login to Yandex Cloud Container Registry
-        id: login-cr
-        uses: yc-actions/yc-cr-login@v1
-        with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
       - name: Image exist
         id: iamge_exist
         run: |
@@ -67,6 +62,11 @@ jobs:
           echo "APP_NAME : ${{ env.APP_NAME }}" >> log.txt
           echo "IMAGE_IS_EXIST : ${{ steps.iamge_exist.outputs.IMAGE_IS_EXIST }}"  >> log.txt
           cat log.txt | sed -n 's/ //p' | column -t -s ':' | sed -e 's/^/ /'
+      - name: Login to Yandex Cloud Container Registry
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v1
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
       - name: Build and push image to Yandex Cloud Container Registry
         if: ${{ steps.iamge_exist.outputs.IMAGE_IS_EXIST == 0 }}
         run: |
