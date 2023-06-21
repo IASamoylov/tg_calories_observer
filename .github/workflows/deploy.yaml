@@ -57,11 +57,12 @@ jobs:
           echo "IMAGE_IS_EXIST=$(yc container image list --registry-id ${{ secrets.YC_CR_SHORT_ID }} | grep ${{ env.BUILD_SHA_SHORT }} | wc -l)" >> $GITHUB_OUTPUT
       - run: |
           echo "Build and push with arguments:"
-          echo "ref - ${{ inputs.ref }}" | sed 's/-//g'
-          echo "BUILD_SHA - ${{ env.BUILD_SHA }}" | sed 's/-//g'
-          echo "BUILD_SHA_SHORT - ${{ env.BUILD_SHA_SHORT }}" | sed 's/-//g'
-          echo "APP_NAME - ${{ env.APP_NAME }}" | sed 's/-//g'
-          echo "IMAGE_IS_EXIST - ${{ needs.prepare.outputs.IMAGE_IS_EXIST }}" | sed 's/-//g'
+          echo "ref - ${{ inputs.ref }}" >> log.txt
+          echo "BUILD_SHA - ${{ env.BUILD_SHA }}"  >> log.txt
+          echo "BUILD_SHA_SHORT - ${{ env.BUILD_SHA_SHORT }}"  >> log.txt
+          echo "APP_NAME - ${{ env.APP_NAME }}" >> log.txt
+          echo "IMAGE_IS_EXIST - ${{ steps.iamge_exist.outputs.IMAGE_IS_EXIST }}"  >> log.txt
+          cat log.txt | sed -n 's/ //p' | column -t -s '-' | sed -e 's/^/ /'
       - name: Build and push image to Yandex Cloud Container Registry
         if: ${{ !!needs.prepare.outputs.IMAGE_IS_NOT_EXIST }}
         run: |
