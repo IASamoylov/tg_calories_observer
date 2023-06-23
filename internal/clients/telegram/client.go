@@ -3,7 +3,7 @@ package telegram
 import (
 	"log"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	telegrambotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 // Client for interaction with telegram API
@@ -19,11 +19,12 @@ func NewTelegramClient(api BotAPI) *Client {
 		self, err := api.GetMe()
 		if err != nil {
 			log.Println(err)
+
 			return
 		}
 		log.Printf("Authorized on account %s", self.UserName)
 
-		u := tgbotapi.NewUpdate(0)
+		u := telegrambotapi.NewUpdate(0)
 		u.Timeout = 60
 
 		updates := api.GetUpdatesChan(u)
@@ -32,10 +33,10 @@ func NewTelegramClient(api BotAPI) *Client {
 			if update.Message != nil { // If we got a message
 				log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+				msg := telegrambotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 				msg.ReplyToMessageID = update.Message.MessageID
 
-				api.Send(msg)
+				_, _ = api.Send(msg)
 			}
 		}
 	}()
