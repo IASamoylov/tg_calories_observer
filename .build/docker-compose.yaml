@@ -3,8 +3,8 @@ services:
   postgres:
     image: postgres:14
     environment:
-      POSTGRES_DB: "test_db"
+      POSTGRES_DB: "calories-observer-telegram-bot"
       POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_HOST_AUTH_METHOD: trust # docker-compose are using only for dev/integration tests
     ports:
       - "5432:5432"

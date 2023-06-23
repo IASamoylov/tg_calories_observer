@@ -3,6 +3,7 @@
     "editor.rulers": [
         120
     ],
+    "go.buildTags": "integration_test",
     "go.lintTool": "golangci-lint",
     "go.buildOnSave": "package",
     "go.lintOnSave": "package",

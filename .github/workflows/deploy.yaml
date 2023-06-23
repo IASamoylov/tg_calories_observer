@@ -108,4 +108,5 @@ jobs:
           revision-core-fraction: ${{ vars.YC_REVISION_CORE_FRACTION }}
           revision-concurrency: ${{ vars.YC_REVISION_CONCURRENCY }}
           revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.BUILD_SHA_SHORT }}
+          revision-env: APP_TELEGRAM_TOKEN=${{secrets.APP_TELEGRAM_TOKEN}}
           revision-execution-timeout: 3
