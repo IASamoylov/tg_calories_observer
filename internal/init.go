@@ -42,8 +42,10 @@ func (app *app) InitPgxConnection() *app {
 
 // InitExternalClientsIfNotSet initializes external services if they was not overridden for integration tests
 func (app *app) InitExternalClientsIfNotSet() *app {
+
 	if app.externalClients.TelegramBotAPI == nil {
-		api, err := telegrambotapi.NewBotAPI("token")
+		token, _ := os.LookupEnv("APP_TELEGRAM_TOKEN")
+		api, err := telegrambotapi.NewBotAPI(token)
 		if err != nil {
 			log.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
 		}
