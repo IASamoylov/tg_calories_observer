@@ -11,14 +11,18 @@ import (
 )
 
 type externalClients struct {
-	TelegramBotAPI telegram.BotAPI
+	TelegramBotAPIConn telegram.BotAPI
+}
+
+type clients struct {
+	telegramClient *telegram.Client
 }
 
 type app struct {
 	// config
 	externalClients *externalClients
 	// db poll
-
+	clients clients
 	// repositories
 	// clients
 	// services
@@ -39,8 +43,9 @@ func NewApp(port string, overrides ...OverrideExtermalClient) *app {
 		externalClients: &externalClients{},
 	}
 
-	app.ApplyOverridesExtermalClient(overrides...).
-		InitExternalClientsIfNotSet().
+	app.ApplyOverridesExtermalClientConn(overrides...).
+		InitExternalClientsConnIfNotSet().
+		InitClients().
 		InitPgxConnection().
 		InitControllers().
 		InitServer(port).

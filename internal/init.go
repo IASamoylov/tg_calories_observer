@@ -8,6 +8,7 @@ import (
 	telegrambotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/api"
+	"github.com/IASamoylov/tg_calories_observer/internal/clients/telegram"
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/graceful"
 	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
 	simpleserver "github.com/IASamoylov/tg_calories_observer/internal/pkg/simple_server"
@@ -40,24 +41,32 @@ func (app *app) InitPgxConnection() *app {
 	return app
 }
 
-// InitExternalClientsIfNotSet initializes external services if they was not overridden for integration tests
-func (app *app) InitExternalClientsIfNotSet() *app {
+// InitExternalClientsConnIfNotSet initializes external services if they was not overridden for integration tests
+func (app *app) InitExternalClientsConnIfNotSet() *app {
 
-	if app.externalClients.TelegramBotAPI == nil {
-		token, _ := os.LookupEnv("APP_TELEGRAM_TOKEN")
-		api, err := telegrambotapi.NewBotAPI(token)
+	if app.externalClients.TelegramBotAPIConn == nil {
+		// token, _ := os.LookupEnv("APP_TELEGRAM_TOKEN")
+		api, err := telegrambotapi.NewBotAPI("5807629090:AAH2Hz7lXZhC9gTRotB0qZeyjAEgXprbB2s")
+		api.Debug = true
 		if err != nil {
 			log.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
 		}
 
-		app.externalClients.TelegramBotAPI = api
+		app.externalClients.TelegramBotAPIConn = api
 	}
 
 	return app
 }
 
-// ApplyOverridesExtermalClient overrides to be able to test the application in isolation from other systems
-func (app *app) ApplyOverridesExtermalClient(overrides ...OverrideExtermalClient) *app {
+// InitExternalClientsConnIfNotSet initializes external services if they was not overridden for integration tests
+func (app *app) InitClients() *app {
+	app.clients.telegramClient = telegram.NewTelegramClient(app.externalClients.TelegramBotAPIConn)
+
+	return app
+}
+
+// ApplyOverridesExtermalClientConn overrides to be able to test the application in isolation from other systems
+func (app *app) ApplyOverridesExtermalClientConn(overrides ...OverrideExtermalClient) *app {
 	for _, override := range overrides {
 		app = override(app)
 	}
@@ -75,7 +84,7 @@ func (app *app) InitGracefulShutdown(signals ...os.Signal) *app {
 // WithTelegramAPI creates service with specific telegram API client
 func WithTelegramAPI(ctor func(token string) *telegrambotapi.BotAPI) OverrideExtermalClient {
 	return func(app *app) *app {
-		app.externalClients.TelegramBotAPI = ctor("token")
+		app.externalClients.TelegramBotAPIConn = ctor("token")
 
 		return app
 	}
