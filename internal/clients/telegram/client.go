@@ -1,7 +1,6 @@
 package telegram
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -14,14 +13,23 @@ import (
 
 // Client for interaction with telegram API
 type Client struct {
-	api BotAPI
+	api   BotAPI
+	photo []byte
 }
 
 // NewTelegramClient creates a new telegram client for receving and sending messages
 func NewTelegramClient(api BotAPI) *Client {
+	client := &Client{api: api}
+
+	resp, err := http.Get("https://static1.colliderimages.com/wordpress/wp-content/" +
+		"uploads/2022/11/The-Godfather.jpg?q=50&fit=contain&w=1140&h=&dpr=1.5")
+	if err == nil && resp.StatusCode == http.StatusOK {
+		defer resp.Body.Close()
+
+		client.photo, _ = io.ReadAll(resp.Body)
+	}
 
 	go func() {
-
 		self, err := api.GetMe()
 		if err != nil {
 			log.Println(err)
@@ -35,15 +43,6 @@ func NewTelegramClient(api BotAPI) *Client {
 
 		updates := api.GetUpdatesChan(u)
 
-		resp, err := http.Get("https://static1.colliderimages.com/wordpress/wp-content/" +
-			"uploads/2022/11/The-Godfather.jpg?q=50&fit=contain&w=1140&h=&dpr=1.5")
-		var reader io.Reader
-
-		if err == nil && resp.StatusCode == http.StatusOK {
-			defer resp.Body.Close()
-			reader = bufio.NewReader(resp.Body)
-		}
-
 		for update := range updates {
 			if update.Message != nil { // If we got a message
 				log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
@@ -53,10 +52,10 @@ func NewTelegramClient(api BotAPI) *Client {
 
 				msg := telegrambotapi.NewMessage(update.Message.Chat.ID, msgText)
 				_, _ = api.Send(msg)
-				if reader != nil {
-					msg := telegrambotapi.NewPhoto(update.Message.Chat.ID, telegrambotapi.FileReader{
-						Name:   "The Godfather",
-						Reader: reader,
+				if len(client.photo) != 0 {
+					msg := telegrambotapi.NewPhoto(update.Message.Chat.ID, telegrambotapi.FileBytes{
+						Name:  "The Godfather",
+						Bytes: client.photo,
 					})
 					_, _ = api.Send(msg)
 
@@ -65,5 +64,5 @@ func NewTelegramClient(api BotAPI) *Client {
 		}
 	}()
 
-	return &Client{api: api}
+	return client
 }
