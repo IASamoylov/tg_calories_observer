@@ -3,10 +3,14 @@
 include ./.build/.env
 export
 
+
+
 LOCAL_BIN?=$(CURDIR)/bin
 CONTAINER_REGISTRY?=
 BUILD_APP_VERSION?=dev
 BUILD_SHA_SHORT?=${BUILD_APP_VERSION}
+
+export PATH := $(PATH):${LOCAL_BIN}
 
 # ==================================================================================== #
 # LDFLAGS ENVS
@@ -25,9 +29,16 @@ APP_LDFLAGS=-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.AppName=${APP_N
 
 
 GO_TEST_DIRECTORY:=./internal/...
+GO_TEST_COVER_PKG:=${GO_TEST_DIRECTORY}
 GO_TEST_COVER_PROFILE?=unit.coverage.out
 GO_TEST_REPORT?=unit.report.xml
 GO_TEST_COVER_EXCLUDE:=mocks|config
+
+GO_INTEGRATION_TEST_DIRECTORY:=./integration_test/...
+GO_INTEGRATION_TEST_COVER_PKG:=./internal/...
+GO_INTEGRATION_TEST_COVER_PROFILE?=integration.coverage.out
+GO_INTEGRATION_TEST_REPORT?=integration.report.xml
+GO_INTEGRATION_TEST_COVER_EXCLUDE:=mocks|config
 
 
 # ==================================================================================== #
@@ -110,22 +121,30 @@ test:
 		--packages $(GO_TEST_DIRECTORY) \
 		--junitfile $(GO_TEST_REPORT) \
 		--junitfile-testcase-classname relative \
-		-- -covermode=count -coverprofile=$(GO_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_TEST_DIRECTORY)
+		-- -cover -covermode=count -coverprofile=$(GO_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_TEST_COVER_PKG)
 	grep -vE '$(GO_TEST_COVER_EXCLUDE)' $(GO_TEST_COVER_PROFILE).tmp > $(GO_TEST_COVER_PROFILE)
 	rm $(GO_TEST_COVER_PROFILE).tmp
 
+
+## integration-test: runs integration tests via gotestsum with coverage
+.PHONY: integration-test
+integration-test: 
+	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
+		--format testname \
+		--packages $(GO_INTEGRATION_TEST_DIRECTORY) \
+		--junitfile $(GO_INTEGRATION_TEST_REPORT) \
+		--junitfile-testcase-classname relative \
+		-- -tags=integration_test -cover -covermode=count -coverprofile=$(GO_INTEGRATION_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_INTEGRATION_TEST_COVER_PKG)
+	grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GOINTEGRATION_TEST_COVER_PROFILE)
+	rm $(GO_TEST_COVER_PROFILE).tmp
 
 ## cg-test: runs codegen before tests
 .PHONY: cg-test
-cg-test: codegen
-	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
-		--format testname \
-		--packages $(GO_TEST_DIRECTORY) \
-		--junitfile $(GO_TEST_REPORT) \
-		--junitfile-testcase-classname relative \
-		-- -covermode=count -coverprofile=$(GO_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_TEST_DIRECTORY)
-	grep -vE '$(GO_TEST_COVER_EXCLUDE)' $(GO_TEST_COVER_PROFILE).tmp > $(GO_TEST_COVER_PROFILE)
-	rm $(GO_TEST_COVER_PROFILE).tmp
+cg-test: codegen test
+
+## cg-integration-test: runs codegen before integration-test
+.PHONY: cg-integration-test
+cg-integration-test: codegen integration-test
 
 ## cover: runs web display of coverage report
 .PHONY: cover
