@@ -17,9 +17,6 @@ type Client struct {
 	api BotAPI
 }
 
-var url = "https://static1.colliderimages.com/wordpress/wp-content/uploads/2022/11/" +
-	"The-Godfather.jpg?q=50&fit=contain&w=1140&h=&dpr=1.5"
-
 // NewTelegramClient creates a new telegram client for receving and sending messages
 func NewTelegramClient(api BotAPI) *Client {
 
@@ -38,12 +35,12 @@ func NewTelegramClient(api BotAPI) *Client {
 
 		updates := api.GetUpdatesChan(u)
 
-		resp, err := http.Get(url)
-		defer resp.Body.Close()
-
+		resp, err := http.Get("https://static1.colliderimages.com/wordpress/wp-content/" +
+			"uploads/2022/11/The-Godfather.jpg?q=50&fit=contain&w=1140&h=&dpr=1.5")
 		var reader io.Reader
 
 		if err == nil && resp.StatusCode == http.StatusOK {
+			defer resp.Body.Close()
 			reader = bufio.NewReader(resp.Body)
 		}
 
