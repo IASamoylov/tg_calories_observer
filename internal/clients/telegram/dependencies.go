@@ -6,10 +6,10 @@ import (
 	telegrambotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-//go:generate mockgen -destination=mocks/mocks.go -package=mocks . ClinetTelegramAPI
+//go:generate mockgen -destination=mocks/mocks.go -package=mocks . BotAPI
 
-// TelegramBotAPI telegram client
-type TelegramBotAPI interface {
+// BotAPI telegram client
+type BotAPI interface {
 	SetAPIEndpoint(apiEndpoint string)
 	MakeRequest(endpoint string, params telegrambotapi.Params) (*telegrambotapi.APIResponse, error)
 	UploadFiles(endpoint string, params telegrambotapi.Params,

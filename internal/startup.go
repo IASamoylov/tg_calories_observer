@@ -11,7 +11,7 @@ import (
 )
 
 type externalClients struct {
-	TelegramBotAPI telegram.TelegramBotAPI
+	TelegramBotAPI telegram.BotAPI
 }
 
 type app struct {
