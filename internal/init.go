@@ -11,6 +11,7 @@ import (
 	debugv1 "github.com/IASamoylov/tg_calories_observer/internal/api/debug/v1"
 	telegramv1 "github.com/IASamoylov/tg_calories_observer/internal/api/telegram/v1"
 	"github.com/IASamoylov/tg_calories_observer/internal/clients/telegram"
+	config "github.com/IASamoylov/tg_calories_observer/internal/config/debug"
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/graceful"
 	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
 	simpleserver "github.com/IASamoylov/tg_calories_observer/internal/pkg/simple_server"
@@ -32,8 +33,14 @@ func (app *app) InitControllers() *app {
 func (app *app) InitServer(port string) *app {
 	host := fmt.Sprintf(":%s", port)
 
+	// optimizing the use of yandex cloud resources
+	var apiPrefix string
+	if config.Version == config.BetaVersion {
+		apiPrefix = config.BetaVersion
+	}
+
 	app.httpServer = simpleserver.
-		NewHTTPServer(host).
+		NewHTTPServer(host, apiPrefix).
 		Register(http.MethodGet, "/api/v1/debug", app.controllers.debug.V1GetServiceInfo).
 		Register(http.MethodPost, "/api/v1/telegram/updates", app.controllers.telegram.V1WebhookUpdates)
 	app.closer.Add(app.httpServer)
