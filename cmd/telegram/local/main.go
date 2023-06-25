@@ -39,6 +39,7 @@ func main() {
 
 			multicloser.AddGlobal(multicloser.NewIOCloserWrap(func() error {
 				cancel()
+
 				return nil
 			}))
 
