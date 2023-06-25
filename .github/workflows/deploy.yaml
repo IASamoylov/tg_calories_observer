@@ -109,5 +109,5 @@ jobs:
           revision-core-fraction: ${{ vars.YC_REVISION_CORE_FRACTION }}
           revision-concurrency: ${{ vars.YC_REVISION_CONCURRENCY }}
           revision-image-url: ${{ secrets.YC_CR_ID }}${{ env.APP_NAME }}:${{ env.BUILD_SHA_SHORT }}
-          revision-secrets: APP_TELEGRAM_TOKEN=${{ secrets.YC_REVISION_SECRET_ID }}/${{ secrets.YC_REVISION_SECRET_VERSION }}/APP_TELEGRAM_TOKEN APP_POSTGRES_HOST=${{ secrets.YC_REVISION_SECRET_ID }}/${{ secrets.YC_REVISION_SECRET_VERSION }}/APP_POSTGRES_HOST APP_POSTGRES_USER=${{ secrets.YC_REVISION_SECRET_ID }}/${{ secrets.YC_REVISION_SECRET_VERSION }}/APP_POSTGRES_USER APP_POSTGRES_PASS=${{ secrets.YC_REVISION_SECRET_ID }}/${{ secrets.YC_REVISION_SECRET_VERSION }}/APP_POSTGRES_PASS
+          revision-secrets: APP_TELEGRAM_TOKEN=${{ secrets.YC_REVISION_SECRET_ID }}/${{ secrets.YC_REVISION_SECRET_VERSION }}/APP_TELEGRAM_TOKEN
           revision-execution-timeout: 3
