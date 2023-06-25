@@ -10,7 +10,7 @@ var (
 	AppName string
 
 	// Version describes version of application dev/beta/latest
-	Version string = "beta"
+	Version string
 
 	// GithubSHA describes the commit on which the build was built
 	GithubSHA string
