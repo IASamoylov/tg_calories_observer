@@ -87,7 +87,7 @@ build:
 .PHONY: build-docker
 build-docker:
 	docker build \
-		--build-arg APP_LDFLAGS="${APP_LDFLAGS}" \
+		--build-arg APP_LDFLAGS=-s -w ${APP_LDFLAGS}" \
 		--build-arg GO_VERSION=${GO_VERSION} \
 		--tag ${CONTAINER_REGISTRY}${APP_NAME}:${BUILD_SHA_SHORT} \
 		--file .build/Dockerfile \
