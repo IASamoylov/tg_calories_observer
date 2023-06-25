@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-type errorMessage struct {
-	Message string `json:"message"`
-}
-
 // SimpleHTTPServer HTTP server
 type SimpleHTTPServer struct {
 	base http.Server
