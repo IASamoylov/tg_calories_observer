@@ -3,7 +3,7 @@ module github.com/IASamoylov/tg_calories_observer
 go 1.20
 
 require (
-	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.2-0.20221020003552-4126fa611266
 	github.com/golang/mock v1.6.0
 	github.com/stretchr/testify v1.8.2
 )

@@ -5,13 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run",
+            "name": "Beta",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/telegram/main.go",
             "env": {
-                "PORT": "9091"
+                "PORT": "9091",
+                "APP_TELEGRAM_TOKEN": "58076***"
+            }
+        },
+        {
+            "name": "Dev",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/telegram/local/main.go",
+            "env": {
+                "PORT": "9091",
+                "APP_TELEGRAM_TOKEN": "6188772***"
             }
         }
     ]

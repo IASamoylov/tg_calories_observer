@@ -15,6 +15,21 @@ func init() {
 	SetGlobalCloser(New())
 }
 
+// IOCloserWrap wraps any close function to convert to the io.Closer type
+type IOCloserWrap struct {
+	close func() error
+}
+
+// NewIOCloserWrap ctor
+func NewIOCloserWrap(close func() error) io.Closer {
+	return &IOCloserWrap{close: close}
+}
+
+// Close releases resources
+func (closer IOCloserWrap) Close() error {
+	return closer.close()
+}
+
 // MultiCloser closes all resources that should be closed
 type MultiCloser struct {
 	mutex             sync.Mutex

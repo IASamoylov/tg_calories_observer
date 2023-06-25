@@ -9,33 +9,45 @@ import (
 	"time"
 )
 
+type errorMessage struct {
+	Message string `json:"message"`
+}
+
 // SimpleHTTPServer HTTP server
 type SimpleHTTPServer struct {
 	base http.Server
 }
 
-// RegisterHandler describes HTTP handler to receive requests
-type RegisterHandler interface {
-	GetName() string
-	Handle(http.ResponseWriter, *http.Request)
-}
-
 // NewHTTPServer creates simple server
-func NewHTTPServer(host string, handlers ...RegisterHandler) *SimpleHTTPServer {
-	mux := http.NewServeMux()
-
-	for _, handler := range handlers {
-		mux.HandleFunc(handler.GetName(), handler.Handle)
-	}
-
+func NewHTTPServer(host string) *SimpleHTTPServer {
 	return &SimpleHTTPServer{
 		base: http.Server{
 			Addr:              host,
 			WriteTimeout:      1 * time.Second,
 			ReadHeaderTimeout: 1 * time.Second,
-			Handler:           mux,
+			Handler:           http.NewServeMux(),
 		},
 	}
+}
+
+// Register registers a handler for the path
+func (server *SimpleHTTPServer) Register(
+	method string,
+	path string,
+	handler func(writer http.ResponseWriter, req *http.Request)) *SimpleHTTPServer {
+	if mux, ok := server.base.Handler.(*http.ServeMux); ok {
+		mux.HandleFunc(path, func(writer http.ResponseWriter, req *http.Request) {
+			if req.Method != method {
+				writer.WriteHeader(http.StatusNotFound)
+
+				return
+			}
+
+			handler(writer, req)
+		})
+	}
+
+	return server
 }
 
 // Run starts a new server in goroutine

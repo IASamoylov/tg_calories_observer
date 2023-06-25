@@ -3,11 +3,13 @@ package internal
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
-	telegrambotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/api"
+	debugv1 "github.com/IASamoylov/tg_calories_observer/internal/api/debug/v1"
+	telegramv1 "github.com/IASamoylov/tg_calories_observer/internal/api/telegram/v1"
 	"github.com/IASamoylov/tg_calories_observer/internal/clients/telegram"
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/graceful"
 	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
@@ -20,7 +22,8 @@ func init() {
 
 // InitControllers initializes REST handlers
 func (app *app) InitControllers() *app {
-	app.controllers = api.GetHandlers()
+	app.controllers.debug = debugv1.NewController()
+	app.controllers.telegram = telegramv1.NewController(app.externalClients.tgbotapi)
 
 	return app
 }
@@ -28,9 +31,11 @@ func (app *app) InitControllers() *app {
 // InitServer initializes the web server to provide access via REST
 func (app *app) InitServer(port string) *app {
 	host := fmt.Sprintf(":%s", port)
-	handlers := api.GetHandlers()
 
-	app.httpServer = simpleserver.NewHTTPServer(host, handlers...)
+	app.httpServer = simpleserver.
+		NewHTTPServer(host).
+		Register(http.MethodGet, "/api/v1/debug", app.controllers.debug.V1GetServiceInfo).
+		Register(http.MethodPost, "/api/v1/telegram/updates", app.controllers.telegram.V1WebhookUpdates)
 	app.closer.Add(app.httpServer)
 
 	return app
@@ -44,15 +49,16 @@ func (app *app) InitPgxConnection() *app {
 // InitExternalClientsConnIfNotSet initializes external services if they was not overridden for integration tests
 func (app *app) InitExternalClientsConnIfNotSet() *app {
 
-	if app.externalClients.TelegramBotAPIConn == nil {
-		// token, _ := os.LookupEnv("APP_TELEGRAM_TOKEN")
-		api, err := telegrambotapi.NewBotAPI("5807629090:AAH2Hz7lXZhC9gTRotB0qZeyjAEgXprbB2s")
-		api.Debug = true
+	if app.externalClients.tgbotapi == nil {
+		// https://core.telegram.org/bots/webhooks#testing-your-bot-with-updates
+		token, _ := os.LookupEnv("APP_TELEGRAM_TOKEN")
+		api, err := tgbotapi.NewBotAPI(token)
+
 		if err != nil {
 			log.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
 		}
 
-		app.externalClients.TelegramBotAPIConn = api
+		app.externalClients.tgbotapi = api
 	}
 
 	return app
@@ -60,7 +66,7 @@ func (app *app) InitExternalClientsConnIfNotSet() *app {
 
 // InitExternalClientsConnIfNotSet initializes external services if they was not overridden for integration tests
 func (app *app) InitClients() *app {
-	app.clients.telegramClient = telegram.NewTelegramClient(app.externalClients.TelegramBotAPIConn)
+	app.clients.telegramClient = telegram.NewTelegramClient(app.externalClients.tgbotapi)
 
 	return app
 }
@@ -82,9 +88,10 @@ func (app *app) InitGracefulShutdown(signals ...os.Signal) *app {
 }
 
 // WithTelegramAPI creates service with specific telegram API client
-func WithTelegramAPI(ctor func(token string) *telegrambotapi.BotAPI) OverrideExtermalClient {
+func WithTelegramAPI(ctor func(token string) *tgbotapi.BotAPI) OverrideExtermalClient {
 	return func(app *app) *app {
-		app.externalClients.TelegramBotAPIConn = ctor("token")
+		token, _ := os.LookupEnv("APP_TELEGRAM_TOKEN")
+		app.externalClients.tgbotapi = ctor(token)
 
 		return app
 	}
