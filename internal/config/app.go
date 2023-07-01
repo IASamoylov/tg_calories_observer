@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/IASamoylov/tg_calories_observer/internal/config/debug"
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/koanf"
 	"log"
 	"strings"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/config/debug"
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/koanf"
 )
 
 const (

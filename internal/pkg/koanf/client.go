@@ -2,12 +2,13 @@ package koanf
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/knadh/koanf/parsers/json"
 	envprovider "github.com/knadh/koanf/providers/env"
 	fileprovider "github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
-	"log"
-	"strings"
 )
 
 type WithProviders func(*koanf.Koanf)

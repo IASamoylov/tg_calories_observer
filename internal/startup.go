@@ -1,10 +1,11 @@
 package internal
 
 import (
-	"github.com/IASamoylov/tg_calories_observer/internal/config"
 	"log"
 	"os"
 	"syscall"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/config"
 
 	debugv1 "github.com/IASamoylov/tg_calories_observer/internal/api/debug/v1"
 	telegramv1 "github.com/IASamoylov/tg_calories_observer/internal/api/telegram/v1"
