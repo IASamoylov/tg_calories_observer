@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/IASamoylov/tg_calories_observer/internal/config"
 	"log"
 	"os"
 	"syscall"
@@ -39,14 +40,16 @@ type app struct {
 	controllers *controllers
 	httpServer  *simpleserver.SimpleHTTPServer
 	closer      *multicloser.MultiCloser
+	cfg         *config.App
 }
 
-// OverrideExtermalClient functions to replace an external clients with mocks for integration tests
-type OverrideExtermalClient func(app *app) *app
+// OverrideExternalClient functions to replace an external clients with mocks for integration tests
+type OverrideExternalClient func(app *app) *app
 
-// NewApp creates a new app with all dependecies
-func NewApp(port string, overrides ...OverrideExtermalClient) *app {
+// NewApp creates a new app with all dependencies
+func NewApp(port string, overrides ...OverrideExternalClient) *app {
 	app := &app{
+		cfg:             config.NewConfig(),
 		closer:          multicloser.New(),
 		externalClients: &externalClients{},
 		controllers:     &controllers{},
@@ -57,7 +60,7 @@ func NewApp(port string, overrides ...OverrideExtermalClient) *app {
 		return multicloser.CloseGlobal()
 	}))
 
-	app.ApplyOverridesExtermalClientConn(overrides...).
+	app.ApplyOverridesExternalClientConn(overrides...).
 		InitExternalClientsConnIfNotSet().
 		InitClients().
 		InitPgxConnection().

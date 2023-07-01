@@ -1,0 +1,56 @@
+package config
+
+import (
+	"fmt"
+	"github.com/IASamoylov/tg_calories_observer/internal/config/debug"
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/koanf"
+	"log"
+	"strings"
+)
+
+const (
+	configPath string = "./internal/config/json"
+)
+
+type App struct {
+	Postgres Postgres `koanf:"postgres"`
+	Telegram Telegram `koanf:"telegram"`
+}
+
+func NewConfig() *App {
+	app := &App{}
+
+	client := koanf.NewClient(
+		koanf.WithFileProvider(fmt.Sprintf("%s/%s.json", configPath, debug.Version)),
+		koanf.WithEnvProvider("APP"),
+	)
+
+	if err := client.Unmarshal("", app); err != nil {
+		log.Fatal(err)
+	}
+
+	return app
+}
+
+type Postgres struct {
+	Host              string `koanf:"host"`
+	User              string `koanf:"user"`
+	Pass              string `koanf:"pass"`
+	SslMode           string `koanf:"ssl_mode"`
+	ConnectionTimeout string `koanf:"connect_timeout"`
+}
+
+func (cfg Postgres) Conn() string {
+	base := fmt.Sprintf("postgresql://%s:%s@%s/%s", cfg.User, cfg.Pass, cfg.Host, debug.AppName)
+
+	args := []string{
+		fmt.Sprintf("sslmode=%s", cfg.SslMode),
+		fmt.Sprintf("connect_timeout=%d", cfg.ConnectionTimeout),
+	}
+
+	return fmt.Sprintf("%s?%s", base, strings.Join(args, "&"))
+}
+
+type Telegram struct {
+	Token string `koanf:"token"`
+}
