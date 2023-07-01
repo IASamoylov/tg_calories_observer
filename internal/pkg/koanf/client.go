@@ -22,7 +22,7 @@ func NewClient(providers ...WithProviders) *koanf.Koanf {
 	return client
 }
 
-// WithEnvProvider ...
+// WithEnvProvider includes configs from envs
 func WithEnvProvider(prefix string) func(*koanf.Koanf) {
 	return func(client *koanf.Koanf) {
 		provider := envprovider.Provider(prefix, "_", func(s string) string {
@@ -35,7 +35,7 @@ func WithEnvProvider(prefix string) func(*koanf.Koanf) {
 	}
 }
 
-// WithFileProvider ...
+// WithFileProvider include configs from files
 func WithFileProvider(path string) func(*koanf.Koanf) {
 	return func(client *koanf.Koanf) {
 		provider := fileprovider.Provider(path)

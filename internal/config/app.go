@@ -23,7 +23,8 @@ func NewConfig() *App {
 	app := &App{}
 
 	client := koanf.NewClient(
-		koanf.WithFileProvider(fmt.Sprintf("%s/%s.json", configPath, debug.Version)),
+		koanf.WithFileProvider(fmt.Sprintf("%s/config.json", configPath)),
+		koanf.WithFileProvider(fmt.Sprintf("%s/%s.config.json", configPath, debug.Version)),
 		koanf.WithEnvProvider("APP"),
 	)
 
@@ -49,7 +50,7 @@ func (cfg Postgres) Conn() string {
 
 	args := []string{
 		fmt.Sprintf("sslmode=%s", cfg.SslMode),
-		fmt.Sprintf("connect_timeout=%d", cfg.ConnectionTimeout),
+		fmt.Sprintf("connect_timeout=%s", cfg.ConnectionTimeout),
 	}
 
 	return fmt.Sprintf("%s?%s", base, strings.Join(args, "&"))
