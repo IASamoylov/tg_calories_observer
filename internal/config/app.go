@@ -12,11 +12,13 @@ const (
 	configPath string = "./internal/config/json"
 )
 
+// App application configuration
 type App struct {
 	Postgres Postgres `koanf:"postgres"`
 	Telegram Telegram `koanf:"telegram"`
 }
 
+// NewConfig creates a new application configuration
 func NewConfig() *App {
 	app := &App{}
 
@@ -32,6 +34,7 @@ func NewConfig() *App {
 	return app
 }
 
+// Postgres settings
 type Postgres struct {
 	Host              string `koanf:"host"`
 	User              string `koanf:"user"`
@@ -40,6 +43,7 @@ type Postgres struct {
 	ConnectionTimeout string `koanf:"connect_timeout"`
 }
 
+// Conn returns a postgres connection string
 func (cfg Postgres) Conn() string {
 	base := fmt.Sprintf("postgresql://%s:%s@%s/%s", cfg.User, cfg.Pass, cfg.Host, debug.AppName)
 
@@ -51,6 +55,7 @@ func (cfg Postgres) Conn() string {
 	return fmt.Sprintf("%s?%s", base, strings.Join(args, "&"))
 }
 
+// Telegram settings
 type Telegram struct {
 	Token string `koanf:"token"`
 }
