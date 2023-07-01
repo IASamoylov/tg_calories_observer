@@ -2,7 +2,7 @@ package debug
 
 const (
 	// BetaVersion beta version name
-	BetaVersion string = "beta"
+	BetaVersion = "beta"
 )
 
 var (

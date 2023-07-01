@@ -6,7 +6,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-//go:generate mockgen -destination=mocks/mocks.go -package=mocks . BotAPI
+//go:generate mockgen -destination=mocks/mocks.go -package=mocks . TelegramBotAPI
 
 // TelegramBotAPI telegram client
 type TelegramBotAPI interface {

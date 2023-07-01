@@ -58,8 +58,7 @@ func (app *app) InitExternalClientsConnIfNotSet() *app {
 
 	if app.externalClients.tgbotapi == nil {
 		// https://core.telegram.org/bots/webhooks#testing-your-bot-with-updates
-		token, _ := os.LookupEnv("APP_TELEGRAM_TOKEN")
-		api, err := tgbotapi.NewBotAPI(token)
+		api, err := tgbotapi.NewBotAPI(app.cfg.Telegram.Token)
 
 		if err != nil {
 			log.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
@@ -71,15 +70,15 @@ func (app *app) InitExternalClientsConnIfNotSet() *app {
 	return app
 }
 
-// InitExternalClientsConnIfNotSet initializes external services if they was not overridden for integration tests
+// InitClients initializes external services if they was not overridden for integration tests
 func (app *app) InitClients() *app {
 	app.clients.telegramClient = telegram.NewTelegramClient(app.externalClients.tgbotapi)
 
 	return app
 }
 
-// ApplyOverridesExtermalClientConn overrides to be able to test the application in isolation from other systems
-func (app *app) ApplyOverridesExtermalClientConn(overrides ...OverrideExtermalClient) *app {
+// ApplyOverridesExternalClientConn overrides to be able to test the application in isolation from other systems
+func (app *app) ApplyOverridesExternalClientConn(overrides ...OverrideExternalClient) *app {
 	for _, override := range overrides {
 		app = override(app)
 	}
@@ -95,10 +94,9 @@ func (app *app) InitGracefulShutdown(signals ...os.Signal) *app {
 }
 
 // WithTelegramAPI creates service with specific telegram API client
-func WithTelegramAPI(ctor func(token string) *tgbotapi.BotAPI) OverrideExtermalClient {
+func WithTelegramAPI(ctor func(token string) *tgbotapi.BotAPI) OverrideExternalClient {
 	return func(app *app) *app {
-		token, _ := os.LookupEnv("APP_TELEGRAM_TOKEN")
-		app.externalClients.tgbotapi = ctor(token)
+		app.externalClients.tgbotapi = ctor(app.cfg.Telegram.Token)
 
 		return app
 	}
