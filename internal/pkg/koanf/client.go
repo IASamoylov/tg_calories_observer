@@ -11,6 +11,7 @@ import (
 	"github.com/knadh/koanf/v2"
 )
 
+// WithProviders adds config provider
 type WithProviders func(*koanf.Koanf)
 
 // NewClient creates a new, pre-configured Koanf client for working with configs
