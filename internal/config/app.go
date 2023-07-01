@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	configPath string = "./internal/config/json"
+	configPath string = "./config"
 )
 
 // App application configuration
