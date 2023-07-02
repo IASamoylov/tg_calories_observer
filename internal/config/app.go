@@ -11,7 +11,7 @@ import (
 
 var (
 	// Path to config
-	Path string = "./config"
+	Path = "./config"
 )
 
 // App application configuration

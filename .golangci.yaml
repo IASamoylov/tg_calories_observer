@@ -41,7 +41,7 @@ issues:
     - S1038
     - exported func .* returns unexported type .*, which can be annoying to use
     - should have a package comment
-    - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked
+    - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Encode|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked
     - should check returned error before deferring
     - package-comments
 

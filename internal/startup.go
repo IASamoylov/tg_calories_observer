@@ -72,6 +72,7 @@ func NewApp(port string, overrides ...OverrideExternalClient) *App {
 	return app
 }
 
+// Run starts server
 func (app *App) Run() {
 	app.httpServer.Run()
 

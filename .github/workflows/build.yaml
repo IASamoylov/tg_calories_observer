@@ -69,6 +69,12 @@ jobs:
         with:
           check_name: Test Report
           junit_files: ${{ env.GO_UNIT_TEST_REPORT }}
+      - name: Test Integration Report
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Test Integration Report
+          junit_files: ${{ env.GO_INTEGRATION_TEST_REPORT }}
       - name: Test
         env:
           LOCAL_BIN: ~/go/bin
@@ -99,3 +105,4 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
+          args: --timeout=10m --config=./.golangci.yaml --issues-exit-code=0
