@@ -30,14 +30,20 @@ jobs:
         env:
           LOCAL_BIN: ~/go/bin
         run: make test
+      - name: Test
+        env:
+          LOCAL_BIN: ~/go/bin
+        run: make integration-test
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.GO_TEST_ARTIFACT_NAME }}
           path: |
-            ${{ env.GO_TEST_REPORT }}
-            ${{ env.GO_TEST_COVER_PROFILE }}
+            ${{ env.GO_UNIT_TEST_REPORT }}
+            ${{ env.GO_UNIT_TEST_COVER_PROFILE }}
+            ${{ env.GO_INTEGRATION_TEST_REPORT }}
+            ${{ env.GO_INTEGRATION_TEST_COVER_PROFILE }}
 
   reports:
     name: Report
@@ -51,6 +57,8 @@ jobs:
         with:
           file: ./.build/.env
           commit: ${{ github.sha}}
+      - name: Install gotestsum
+        run: go install github.com/wadey/gocovmerge@latest
       - name: Download test reports
         uses: actions/download-artifact@v3
         with:
@@ -60,7 +68,11 @@ jobs:
         if: always()
         with:
           check_name: Test Report
-          junit_files: ${{ env.GO_TEST_REPORT }}
+          junit_files: ${{ env.GO_UNIT_TEST_REPORT }}
+      - name: Test
+        env:
+          LOCAL_BIN: ~/go/bin
+        run: make merge-cover
       - name: Test Coverage
         uses: codecov/codecov-action@v3
         with:
