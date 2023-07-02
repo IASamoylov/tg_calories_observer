@@ -14,6 +14,8 @@ func TestShutdown(t *testing.T) {
 	t.Parallel()
 
 	t.Run("without the transmitted signals, graceful shutdown will not work", func(t *testing.T) {
+		t.Parallel()
+
 		closer := mocks.NewMockCloser(gomock.NewController(t))
 		closer.EXPECT().Close().Times(0)
 
@@ -21,6 +23,8 @@ func TestShutdown(t *testing.T) {
 	})
 
 	t.Run("closes all resources after receiving stop signal", func(t *testing.T) {
+		t.Parallel()
+
 		closer := mocks.NewMockCloser(gomock.NewController(t))
 		closer.EXPECT().Close().Times(1)
 
