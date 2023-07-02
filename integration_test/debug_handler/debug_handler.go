@@ -36,7 +36,7 @@ func (s *DebugHandlerSuite) SetupTest() {
 
 // TestV1GetServiceInfo individual test functions that will be run by the suite
 func (s *DebugHandlerSuite) TestV1GetServiceInfo() {
-	s.Run("the handle returns information about the service: version, revision number and build time", func() {
+	s.Run("handle returns information about the service: version, revision number and build time", func() {
 		buildTime := time.Now().UTC().Format(time.RFC1123)
 
 		debug.Version = "integration"
@@ -62,5 +62,14 @@ func (s *DebugHandlerSuite) TestV1GetServiceInfo() {
 			"github_sha_short": "f616bd7c",
 			"build_time":       buildTime,
 		}, debugInfo)
+	})
+
+	s.Run("handle return 404 NotFound if call incorrect HTTP Method", func() {
+		req, err := http.NewRequestWithContext(s.ctx, http.MethodPost, fmt.Sprintf("%s/v1/debug", s.gc.Host), nil)
+		s.Require().NoError(err, "an error occurred when forming a request to the handle /api/v1/debug")
+
+		resp, err := http.DefaultClient.Do(req)
+		s.Require().NoError(err, "request to handle /api/v1/debug completed with error")
+		s.Assert().Equal(http.StatusNotFound, resp.StatusCode)
 	})
 }

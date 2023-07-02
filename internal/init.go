@@ -37,13 +37,13 @@ func (app *App) InitServer(port string) *App {
 	// optimizing the use of yandex cloud resources
 	var apiPrefix string
 	if config.Version == config.BetaVersion {
-		apiPrefix = config.BetaVersion
+		apiPrefix = fmt.Sprintf("%s/", config.BetaVersion)
 	}
 
 	app.httpServer = simpleserver.
 		NewHTTPServer(host, apiPrefix).
-		Register(http.MethodGet, "/api/v1/debug", app.controllers.debug.V1GetServiceInfo).
-		Register(http.MethodPost, "/api/v1/telegram/updates", app.controllers.telegram.V1WebhookUpdates)
+		Register(http.MethodGet, "api/v1/debug", app.controllers.debug.V1GetServiceInfo).
+		Register(http.MethodPost, "api/v1/telegram/updates", app.controllers.telegram.V1WebhookUpdates)
 	app.closer.Add(app.httpServer)
 
 	return app

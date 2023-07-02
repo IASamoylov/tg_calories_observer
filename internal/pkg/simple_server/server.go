@@ -34,9 +34,7 @@ func (server *SimpleHTTPServer) Register(
 	path string,
 	handler func(writer http.ResponseWriter, req *http.Request)) *SimpleHTTPServer {
 	if mux, ok := server.base.Handler.(*http.ServeMux); ok {
-		if server.apiPrefix != "" {
-			path = fmt.Sprintf("/%s%s", server.apiPrefix, path)
-		}
+		path = fmt.Sprintf("/%s%s", server.apiPrefix, path)
 
 		mux.HandleFunc(path, func(writer http.ResponseWriter, req *http.Request) {
 			if req.Method != method {

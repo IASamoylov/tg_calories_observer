@@ -67,7 +67,7 @@ func NewApp(port string, overrides ...OverrideExternalClient) *App {
 		InitPgxConnection().
 		InitControllers().
 		InitServer(port).
-		InitGracefulShutdown(os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+		InitGracefulShutdown(os.Interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 
 	return app
 }
@@ -75,7 +75,6 @@ func NewApp(port string, overrides ...OverrideExternalClient) *App {
 // Run starts server
 func (app *App) Run() {
 	app.httpServer.Run()
-
 	app.closer.Wait()
 
 	log.Print("Server Stopped")

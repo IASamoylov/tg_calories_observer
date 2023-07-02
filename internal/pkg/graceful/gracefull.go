@@ -8,6 +8,8 @@ import (
 	"os/signal"
 )
 
+var done = make(chan os.Signal, 1)
+
 // Shutdown closes the resource after receiving a signal about the end of the application
 func Shutdown(closer io.Closer, signals ...os.Signal) {
 	if len(signals) == 0 {
@@ -17,7 +19,6 @@ func Shutdown(closer io.Closer, signals ...os.Signal) {
 	}
 
 	go func() {
-		done := make(chan os.Signal, 1)
 		defer close(done)
 		signal.Notify(done, signals...)
 		<-done
