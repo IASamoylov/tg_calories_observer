@@ -32,13 +32,13 @@ GO_TEST_DIRECTORY:=./internal/...
 GO_TEST_COVER_PKG:=${GO_TEST_DIRECTORY}
 GO_TEST_COVER_PROFILE?=unit.coverage.out
 GO_TEST_REPORT?=unit.report.xml
-GO_TEST_COVER_EXCLUDE:=mocks|config
+GO_TEST_COVER_EXCLUDE:=mocks
 
 GO_INTEGRATION_TEST_DIRECTORY:=./integration_test/...
-GO_INTEGRATION_TEST_COVER_PKG:=./internal/...
+GO_INTEGRATION_TEST_COVER_PKG:=${GO_TEST_DIRECTORY}
 GO_INTEGRATION_TEST_COVER_PROFILE?=integration.coverage.out
 GO_INTEGRATION_TEST_REPORT?=integration.report.xml
-GO_INTEGRATION_TEST_COVER_EXCLUDE:=mocks|config
+GO_INTEGRATION_TEST_COVER_EXCLUDE:=mocks
 
 
 # ==================================================================================== #
@@ -135,8 +135,8 @@ integration-test:
 		--junitfile $(GO_INTEGRATION_TEST_REPORT) \
 		--junitfile-testcase-classname relative \
 		-- -tags=integration_test -cover -covermode=count -coverprofile=$(GO_INTEGRATION_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_INTEGRATION_TEST_COVER_PKG)
-	grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GOINTEGRATION_TEST_COVER_PROFILE)
-	rm $(GO_TEST_COVER_PROFILE).tmp
+	grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GO_INTEGRATION_TEST_COVER_PROFILE)
+	rm $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp
 
 ## cg-test: runs codegen before tests
 .PHONY: cg-test

@@ -16,7 +16,7 @@ import (
 )
 
 type externalClients struct {
-	tgbotapi types.TelegramBotAPI
+	telegramBotAPI types.TelegramBotAPI
 }
 
 type clients struct {
@@ -28,9 +28,10 @@ type controllers struct {
 	telegram *telegramv1.Controller
 }
 
-type app struct {
-	// config
-	externalClients *externalClients
+// App service
+type App struct {
+	Cfg             *config.App
+	ExternalClients *externalClients
 	// db poll
 	clients clients
 	// repositories
@@ -41,18 +42,17 @@ type app struct {
 	controllers *controllers
 	httpServer  *simpleserver.SimpleHTTPServer
 	closer      *multicloser.MultiCloser
-	cfg         *config.App
 }
 
 // OverrideExternalClient functions to replace an external clients with mocks for integration tests
-type OverrideExternalClient func(app *app) *app
+type OverrideExternalClient func(app *App) *App
 
-// NewApp creates a new app with all dependencies
-func NewApp(port string, overrides ...OverrideExternalClient) *app {
-	app := &app{
-		cfg:             config.NewConfig(),
+// NewApp creates a new App with all dependencies
+func NewApp(port string, overrides ...OverrideExternalClient) *App {
+	app := &App{
+		Cfg:             config.NewConfig(),
 		closer:          multicloser.New(),
-		externalClients: &externalClients{},
+		ExternalClients: &externalClients{},
 		controllers:     &controllers{},
 	}
 
@@ -72,7 +72,7 @@ func NewApp(port string, overrides ...OverrideExternalClient) *app {
 	return app
 }
 
-func (app *app) Run() {
+func (app *App) Run() {
 	app.httpServer.Run()
 
 	app.closer.Wait()

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	app "github.com/IASamoylov/tg_calories_observer/internal"
@@ -21,14 +23,14 @@ func main() {
 		port = "9090"
 	}
 
-	app.NewApp(port, app.WithTelegramAPI(func(token string) *tgbotapi.BotAPI {
+	app.NewApp(port, app.WithTelegramAPI(func(token string) types.TelegramBotAPI {
 		api, err := tgbotapi.NewBotAPI(token)
 
 		if err != nil {
 			log.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
 		}
 
-		// преобразовывает long polling to webhook integration for local development
+		// converts long polling to webhook integration for local development
 		go func() {
 			u := tgbotapi.NewUpdate(0)
 			u.Timeout = 60
@@ -48,11 +50,6 @@ func main() {
 				case <-ctx.Done():
 					return
 				default:
-					port, ok := os.LookupEnv("PORT")
-					if !ok {
-						port = "9090"
-					}
-
 					msg, err := json.Marshal(update)
 					log.Println(string(msg))
 					if err != nil {
