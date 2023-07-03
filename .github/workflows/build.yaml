@@ -45,7 +45,8 @@ jobs:
       - name: Integration Test
         env:
           LOCAL_BIN: ~/go/bin
-          APP_POSTGRES_HOST: "postgres:5432"
+          APP_POSTGRES_HOST: "postgres"
+          APP_POSTGRES_PORT: "5432"
         run: make integration-test
       - name: Upload test reports
         if: always()
