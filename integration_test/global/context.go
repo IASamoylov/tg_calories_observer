@@ -5,12 +5,17 @@ package global
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"sync"
 	"testing"
 	"time"
+
+	_ "github.com/lib/pq"
+
+	"github.com/pressly/goose/v3"
 
 	"github.com/IASamoylov/tg_calories_observer/internal"
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types"
@@ -38,7 +43,7 @@ func NewGlobalContext() *Context {
 		Context:         ctx,
 		Host:            fmt.Sprintf("http://localhost:%s/api", PORT),
 		telegramAPIMock: telegramAPIMock,
-		app: internal.NewApp(PORT, internal.WithTelegramAPI(func(_ string) types.TelegramBotAPI {
+		app: internal.NewApp(ctx, PORT, internal.WithTelegramAPI(func(_ string) types.TelegramBotAPI {
 			return telegramAPIMock
 		})),
 	}
@@ -49,6 +54,25 @@ func NewGlobalContext() *Context {
 }
 
 func (c *Context) ApplyMigrations() {
+	db, err := sql.Open("postgres", c.app.Cfg.Postgres.Conn())
+	if err != nil {
+		log.Panicf("an error occurred when creating a connection to the database: %s", err.Error())
+	}
+
+	if err := goose.Up(db, "../migrations"); err != nil {
+		log.Panicf("an error occurred while rolling migrations: %s", err)
+	}
+}
+
+func (c *Context) ResetMigrations() {
+	db, err := sql.Open("postgres", c.app.Cfg.Postgres.Conn())
+	if err != nil {
+		log.Panicf("an error occurred when creating a connection to the database: %s", err.Error())
+	}
+
+	if err := goose.Reset(db, "../migrations"); err != nil {
+		log.Panicf("an error occurred while rolling migrations: %s", err)
+	}
 }
 
 func (c *Context) WaitForRun() {

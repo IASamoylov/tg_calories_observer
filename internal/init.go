@@ -6,6 +6,10 @@ import (
 	"net/http"
 	"os"
 
+	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -25,7 +29,7 @@ func init() {
 // InitControllers initializes REST handlers
 func (app *App) InitControllers() *App {
 	app.controllers.debug = debugv1.NewController()
-	app.controllers.telegram = telegramv1.NewController(app.ExternalClients.telegramBotAPI)
+	app.controllers.telegram = telegramv1.NewController(app.externalClients.telegramBotAPI)
 
 	return app
 }
@@ -51,13 +55,29 @@ func (app *App) InitServer(port string) *App {
 
 // InitPgxConnection initializes the pgx driver to connect to postgres
 func (app *App) InitPgxConnection() *App {
+	pool, err := pgxpool.New(app.ctx, app.Cfg.Postgres.Conn())
+	if err != nil {
+		log.Panicf("an error occurred when creating a pool of connections to the database: %s", err.Error())
+	}
+	app.closer.Add(multicloser.NewIOCloserWrap(func() error {
+		pool.Close()
+
+		return nil
+	}))
+
+	if err = pool.Ping(app.ctx); err != nil {
+		log.Panicf("an error occurred when picking the database: %s", err.Error())
+	}
+
+	app.pool = pool
+
 	return app
 }
 
 // InitExternalClientsConnIfNotSet initializes external services if they was not overridden for integration tests
 func (app *App) InitExternalClientsConnIfNotSet() *App {
 
-	if app.ExternalClients.telegramBotAPI == nil {
+	if app.externalClients.telegramBotAPI == nil {
 		// https://core.telegram.org/bots/webhooks#testing-your-bot-with-updates
 		api, err := tgbotapi.NewBotAPI(app.Cfg.Telegram.Token)
 
@@ -65,7 +85,7 @@ func (app *App) InitExternalClientsConnIfNotSet() *App {
 			log.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
 		}
 
-		app.ExternalClients.telegramBotAPI = api
+		app.externalClients.telegramBotAPI = api
 	}
 
 	return app
@@ -73,7 +93,7 @@ func (app *App) InitExternalClientsConnIfNotSet() *App {
 
 // InitClients initializes external services if they was not overridden for integration tests
 func (app *App) InitClients() *App {
-	app.clients.telegramClient = telegram.NewTelegramClient(app.ExternalClients.telegramBotAPI)
+	app.clients.telegramClient = telegram.NewTelegramClient(app.externalClients.telegramBotAPI)
 
 	return app
 }
@@ -97,7 +117,7 @@ func (app *App) InitGracefulShutdown(signals ...os.Signal) *App {
 // WithTelegramAPI creates service with specific telegram API client
 func WithTelegramAPI(ctor func(token string) types.TelegramBotAPI) OverrideExternalClient {
 	return func(app *App) *App {
-		app.ExternalClients.telegramBotAPI = ctor(app.Cfg.Telegram.Token)
+		app.externalClients.telegramBotAPI = ctor(app.Cfg.Telegram.Token)
 
 		return app
 	}

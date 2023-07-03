@@ -4,11 +4,14 @@ include ./.build/.env
 export
 
 
-
 LOCAL_BIN?=$(CURDIR)/bin
 CONTAINER_REGISTRY?=
 BUILD_APP_VERSION?=dev
 BUILD_SHA_SHORT?=${BUILD_APP_VERSION}
+GOOSE_DRIVER=postgres
+APP_POSTGRES_USER?=postgres
+APP_POSTGRES_PASS?=
+APP_POSTGRES_SSL_MODE?=prefer
 
 export PATH := $(PATH):${LOCAL_BIN}
 
@@ -65,6 +68,29 @@ bin-deps: .install-lint
 	GOBIN=$(LOCAL_BIN) go install gotest.tools/gotestsum@latest
 	GOBIN=$(LOCAL_BIN) go install github.com/wadey/gocovmerge@latest
 	go get github.com/golang/mock/mockgen
+
+
+# ==================================================================================== #
+# INFRA
+# ==================================================================================== #
+
+.PHONY: infra
+infra:
+	docker-compose -f ./.build/docker-compose.yaml up -d --force-recreate --wait
+
+.PHONY: migration-reset
+migration-reset:
+	$(LOCAL_BIN)/goose -dir "./migrations" "host=localhost user=${APP_POSTGRES_USER} password=${APP_POSTGRES_PASS} dbname=${APP_NAME} sslmode=${APP_POSTGRES_SSL_MODE}" reset
+
+.PHONY: migration-up
+migration-up:
+	$(LOCAL_BIN)/goose -dir "./migrations" "host=localhost user=${APP_POSTGRES_USER} password=${APP_POSTGRES_PASS} dbname=${APP_NAME} sslmode=${APP_POSTGRES_SSL_MODE}" up
+
+.PHONY: migration
+migration: migration-reset migration-up
+
+.PHONY: migration-infra
+migration-infra: infra migration-reset migration-up
 
 # ==================================================================================== #
 # BUILD

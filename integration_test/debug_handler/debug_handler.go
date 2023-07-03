@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"testing"
 	"time"
 
 	"github.com/IASamoylov/tg_calories_observer/integration_test/global"
@@ -20,18 +19,13 @@ import (
 // DebugHandlerSuite a test suite struct that embeds suite.Suite
 type DebugHandlerSuite struct {
 	suite.Suite
-	ctx context.Context
-	gc  *global.Context
-}
-
-// NewRunnerDebugHandlerSuite creates a new runner
-func NewRunnerDebugHandlerSuite(t *testing.T, gc *global.Context) {
-	suite.Run(t, &DebugHandlerSuite{gc: gc})
+	ctx           context.Context
+	GlobalContext *global.Context
 }
 
 // SetupTest method that will be called before each test
 func (s *DebugHandlerSuite) SetupTest() {
-	s.ctx, _ = context.WithTimeout(s.gc, 500*time.Millisecond)
+	s.ctx, _ = context.WithTimeout(s.GlobalContext, 500*time.Millisecond)
 }
 
 // TestV1GetServiceInfo individual test functions that will be run by the suite
@@ -45,7 +39,7 @@ func (s *DebugHandlerSuite) TestV1GetServiceInfo() {
 		debug.GithubSHAShort = "f616bd7c"
 		debug.BuildTime = buildTime
 
-		req, err := http.NewRequestWithContext(s.ctx, http.MethodGet, fmt.Sprintf("%s/v1/debug", s.gc.Host), nil)
+		req, err := http.NewRequestWithContext(s.ctx, http.MethodGet, fmt.Sprintf("%s/v1/debug", s.GlobalContext.Host), nil)
 		s.Require().NoError(err, "an error occurred when forming a request to the handle /api/v1/debug")
 
 		resp, err := http.DefaultClient.Do(req)
@@ -65,7 +59,7 @@ func (s *DebugHandlerSuite) TestV1GetServiceInfo() {
 	})
 
 	s.Run("handle return 404 NotFound if call incorrect HTTP Method", func() {
-		req, err := http.NewRequestWithContext(s.ctx, http.MethodPost, fmt.Sprintf("%s/v1/debug", s.gc.Host), nil)
+		req, err := http.NewRequestWithContext(s.ctx, http.MethodPost, fmt.Sprintf("%s/v1/debug", s.GlobalContext.Host), nil)
 		s.Require().NoError(err, "an error occurred when forming a request to the handle /api/v1/debug")
 
 		resp, err := http.DefaultClient.Do(req)
