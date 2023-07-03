@@ -10,6 +10,18 @@ jobs:
   build:
     name: Go
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: ${{ env.APP_NAME }}
+          POSTGRES_USER: "postgres"
+          POSTGRES_HOST_AUTH_METHOD: trust # docker-compose are using only for dev/integration tests
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -33,6 +45,7 @@ jobs:
       - name: Test
         env:
           LOCAL_BIN: ~/go/bin
+          APP_POSTGRES_HOST: postgres
         run: make integration-test
       - name: Upload test reports
         if: always()
@@ -49,18 +62,6 @@ jobs:
     name: Report
     needs: build
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_DB: ${{ env.APP_NAME }}
-          POSTGRES_USER: "postgres"
-          POSTGRES_HOST_AUTH_METHOD: trust # docker-compose are using only for dev/integration tests
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - name: Setup Checkout
         uses: actions/checkout@v3
