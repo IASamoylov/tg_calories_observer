@@ -76,11 +76,7 @@ bin-deps: .install-lint
 
 .PHONY: infra
 infra:
-	docker-compose -f ./.build/docker-compose.yaml up -d # --force-recreate --wait
-
-.PHONY: infra-down
-infra-down:
-	docker-compose -f ./.build/docker-compose.yaml down
+	docker-compose -f ./.build/docker-compose.yaml up -d --force-recreate --wait
 
 .PHONY: migration-reset
 migration-reset:
