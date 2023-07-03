@@ -17,8 +17,6 @@ func (ctr Controller) V1WebhookUpdates(writer http.ResponseWriter, req *http.Req
 		return
 	}
 
-	defer req.Body.Close()
-
 	update := <-ctr.bot.ListenForWebhookRespReqFormat(writer, req)
 	log.Println(update)
 	go func(update tgbotapi.Update) {

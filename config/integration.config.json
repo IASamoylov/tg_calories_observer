@@ -1,0 +1,10 @@
+{
+  "postgres": {
+    "host": "localhost:5432",
+    "user": "postgres",
+    "ssl_mode": "prefer"
+  },
+  "telegram": {
+    "token": ""
+  }
+}

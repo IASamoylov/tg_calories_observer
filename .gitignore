@@ -26,3 +26,4 @@ unit.coverage.out
 /.idea/modules.xml
 /.idea/tg_calories_observer.iml
 /.idea/vcs.xml
+/integration.report.xml

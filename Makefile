@@ -20,7 +20,7 @@ APP_LDFLAGS=-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.AppName=${APP_N
 			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.Version=${BUILD_APP_VERSION}'\
 			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHA=${BUILD_SHA}'\
 			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHAShort=${BUILD_SHA_SHORT}'\
-			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.BuildedAt=$(shell date -u)'
+			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.BuildTime=$(shell date -u)'
 
 
 # ==================================================================================== #
@@ -28,17 +28,13 @@ APP_LDFLAGS=-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.AppName=${APP_N
 # ==================================================================================== #
 
 
-GO_TEST_DIRECTORY:=./internal/...
-GO_TEST_COVER_PKG:=${GO_TEST_DIRECTORY}
-GO_TEST_COVER_PROFILE?=unit.coverage.out
-GO_TEST_REPORT?=unit.report.xml
-GO_TEST_COVER_EXCLUDE:=mocks|config
+GO_UNIT_TEST_DIRECTORY:=./internal/...
+GO_UNIT_TEST_COVER_PKG:=${GO_TEST_DIRECTORY}
+GO_UNIT_TEST_COVER_EXCLUDE:=mocks
 
 GO_INTEGRATION_TEST_DIRECTORY:=./integration_test/...
-GO_INTEGRATION_TEST_COVER_PKG:=./internal/...
-GO_INTEGRATION_TEST_COVER_PROFILE?=integration.coverage.out
-GO_INTEGRATION_TEST_REPORT?=integration.report.xml
-GO_INTEGRATION_TEST_COVER_EXCLUDE:=mocks|config
+GO_INTEGRATION_TEST_COVER_PKG:=${GO_UNIT_TEST_DIRECTORY}
+GO_INTEGRATION_TEST_COVER_EXCLUDE:=mocks
 
 
 # ==================================================================================== #
@@ -67,6 +63,7 @@ bin-deps: .install-lint
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.10.0
 	GOBIN=$(LOCAL_BIN) go install github.com/golang/mock/mockgen@v1.6.0
 	GOBIN=$(LOCAL_BIN) go install gotest.tools/gotestsum@latest
+	GOBIN=$(LOCAL_BIN) go install github.com/wadey/gocovmerge@latest
 	go get github.com/golang/mock/mockgen
 
 # ==================================================================================== #
@@ -118,12 +115,12 @@ run: build
 test: 
 	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
 		--format testname \
-		--packages $(GO_TEST_DIRECTORY) \
-		--junitfile $(GO_TEST_REPORT) \
+		--packages $(GO_UNIT_TEST_DIRECTORY) \
+		--junitfile $(GO_UNIT_TEST_REPORT) \
 		--junitfile-testcase-classname relative \
-		-- -cover -covermode=count -coverprofile=$(GO_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_TEST_COVER_PKG)
-	grep -vE '$(GO_TEST_COVER_EXCLUDE)' $(GO_TEST_COVER_PROFILE).tmp > $(GO_TEST_COVER_PROFILE)
-	rm $(GO_TEST_COVER_PROFILE).tmp
+		-- -cover -covermode=count -coverprofile=$(GO_UNIT_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_UNIT_TEST_COVER_PKG)
+	grep -vE '$(GO_UNIT_TEST_COVER_EXCLUDE)' $(GO_UNIT_TEST_COVER_PROFILE).tmp > $(GO_UNIT_TEST_COVER_PROFILE)
+	rm $(GO_UNIT_TEST_COVER_PROFILE).tmp
 
 
 ## integration-test: runs integration tests via gotestsum with coverage
@@ -135,8 +132,8 @@ integration-test:
 		--junitfile $(GO_INTEGRATION_TEST_REPORT) \
 		--junitfile-testcase-classname relative \
 		-- -tags=integration_test -cover -covermode=count -coverprofile=$(GO_INTEGRATION_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_INTEGRATION_TEST_COVER_PKG)
-	grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GOINTEGRATION_TEST_COVER_PROFILE)
-	rm $(GO_TEST_COVER_PROFILE).tmp
+	grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GO_INTEGRATION_TEST_COVER_PROFILE)
+	rm $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp
 
 ## cg-test: runs codegen before tests
 .PHONY: cg-test
@@ -149,7 +146,18 @@ cg-integration-test: codegen integration-test
 ## cover: runs web display of coverage report
 .PHONY: cover
 cover: test
-	go tool cover -html=$(GO_TEST_COVER_PROFILE)
+	go tool cover -html=$(GO_UNIT_TEST_COVER_PROFILE)
+
+## cover: runs web display of coverage report
+.PHONY: integration-cover
+integration-cover: integration-test
+	go tool cover -html=$(GO_INTEGRATION_TEST_COVER_PROFILE)
+
+
+## cover: runs web display of coverage report
+.PHONY: merge-cover
+merge-cover:
+	$(LOCAL_BIN)/gocovmerge ./$(GO_UNIT_TEST_COVER_PROFILE) ./$(GO_INTEGRATION_TEST_COVER_PROFILE) > $(GO_TEST_COVER_PROFILE)
 
 ## lint: runs lint for changes using config .golangci.yaml
 .PHONY: lint
