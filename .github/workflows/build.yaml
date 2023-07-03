@@ -7,14 +7,32 @@ on:
         required: true
 
 jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      POSTGRES_DB: ${{ steps.output_tag.outputs.APP_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+          commit: ${{ github.sha }}
+      - name: Output tag
+        id: output_tag
+        run: |
+          echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
   build:
     name: Go
+    needs: prepare
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres
         env:
-          POSTGRES_DB: ${{ github.sha }}
+          POSTGRES_DB: ${{ needs.prepare.outputs.POSTGRES_DB }}
           POSTGRES_HOST_AUTH_METHOD: trust # docker-compose are using only for dev/integration tests
         options: >-
           --health-cmd pg_isready
