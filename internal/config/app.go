@@ -40,6 +40,7 @@ func NewConfig() *App {
 // Postgres settings
 type Postgres struct {
 	Host              string `koanf:"host"`
+	Port              string `koanf:"port"`
 	User              string `koanf:"user"`
 	Pass              string `koanf:"pass"`
 	SslMode           string `koanf:"ssl_mode"`
@@ -48,7 +49,7 @@ type Postgres struct {
 
 // Conn returns a postgres connection string
 func (cfg Postgres) Conn() string {
-	base := fmt.Sprintf("postgresql://%s:%s@%s/%s", cfg.User, cfg.Pass, cfg.Host, debug.AppName)
+	base := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", cfg.User, cfg.Pass, cfg.Host, cfg.Port, debug.AppName)
 
 	args := []string{
 		fmt.Sprintf("sslmode=%s", cfg.SslMode),

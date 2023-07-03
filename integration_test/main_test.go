@@ -7,6 +7,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/IASamoylov/tg_calories_observer/integration_test/debug_handler"
 
 	"github.com/IASamoylov/tg_calories_observer/integration_test/global"
@@ -19,15 +21,20 @@ var globalContext *global.Context
 
 func TestMain(m *testing.M) {
 	debug.Version = "integration"
-	debug.AppName = "calories-observer-telegram-bot"
+	debug.AppName = os.Getenv("APP_NAME")
 	config.Path = "../config"
 
 	globalContext = global.NewGlobalContext()
 	globalContext.ApplyMigrations()
 	globalContext.WaitForRun()
-	os.Exit(m.Run())
+	code := m.Run()
+	globalContext.ResetMigrations()
+
+	os.Exit(code)
 }
 
 func TestIntegration(t *testing.T) {
-	debug_handler.NewRunnerDebugHandlerSuite(t, globalContext)
+	t.Run("DebugHandlerSuite", func(t *testing.T) {
+		suite.Run(t, &debug_handler.DebugHandlerSuite{GlobalContext: globalContext})
+	})
 }

@@ -23,7 +23,7 @@ func main() {
 		port = "9090"
 	}
 
-	app.NewApp(port, app.WithTelegramAPI(func(token string) types.TelegramBotAPI {
+	app.NewApp(context.Background(), port, app.WithTelegramAPI(func(token string) types.TelegramBotAPI {
 		api, err := tgbotapi.NewBotAPI(token)
 
 		if err != nil {

@@ -1,9 +1,12 @@
 package internal
 
 import (
+	"context"
 	"log"
 	"os"
 	"syscall"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/config"
 
@@ -30,10 +33,11 @@ type controllers struct {
 
 // App service
 type App struct {
+	context.Context
 	Cfg             *config.App
-	ExternalClients *externalClients
-	// db poll
-	clients clients
+	pool            *pgxpool.Pool
+	externalClients *externalClients
+	clients         clients
 	// repositories
 	// clients
 	// services
@@ -42,17 +46,19 @@ type App struct {
 	controllers *controllers
 	httpServer  *simpleserver.SimpleHTTPServer
 	closer      *multicloser.MultiCloser
+	ctx         context.Context
 }
 
 // OverrideExternalClient functions to replace an external clients with mocks for integration tests
 type OverrideExternalClient func(app *App) *App
 
 // NewApp creates a new App with all dependencies
-func NewApp(port string, overrides ...OverrideExternalClient) *App {
+func NewApp(ctx context.Context, port string, overrides ...OverrideExternalClient) *App {
 	app := &App{
+		ctx:             ctx,
 		Cfg:             config.NewConfig(),
 		closer:          multicloser.New(),
-		ExternalClients: &externalClients{},
+		externalClients: &externalClients{},
 		controllers:     &controllers{},
 	}
 
