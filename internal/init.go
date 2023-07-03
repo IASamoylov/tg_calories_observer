@@ -55,7 +55,6 @@ func (app *App) InitServer(port string) *App {
 
 // InitPgxConnection initializes the pgx driver to connect to postgres
 func (app *App) InitPgxConnection() *App {
-	log.Println(app.Cfg.Postgres.Conn())
 	pool, err := pgxpool.New(app.ctx, app.Cfg.Postgres.Conn())
 	if err != nil {
 		log.Panicf("an error occurred when creating a pool of connections to the database: %s", err.Error())

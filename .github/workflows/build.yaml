@@ -14,6 +14,7 @@ jobs:
       postgres:
         image: postgres
         env:
+          POSTGRES_DB: ${{ github.sha }}
           POSTGRES_HOST_AUTH_METHOD: trust # docker-compose are using only for dev/integration tests
         options: >-
           --health-cmd pg_isready
@@ -29,7 +30,7 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
-          commit: ${{ github.sha}}
+          commit: ${{ github.sha }}
       - name: Setup Golang with cache
         uses: magnetikonline/action-golang-cache@v4
         with:
@@ -47,7 +48,6 @@ jobs:
           LOCAL_BIN: ~/go/bin
           APP_POSTGRES_HOST: "localhost"
           APP_POSTGRES_PORT: ${{ env.APP_POSTGRES_PORT }}
-          APP_NAME: "postgres"
         run: make integration-test
       - name: Upload test reports
         if: always()

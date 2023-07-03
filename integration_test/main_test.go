@@ -4,7 +4,6 @@
 package test_integration
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -23,7 +22,6 @@ var globalContext *global.Context
 func TestMain(m *testing.M) {
 	debug.Version = "integration"
 	debug.AppName = os.Getenv("APP_NAME")
-	fmt.Println(debug.AppName)
 	config.Path = "../config"
 
 	globalContext = global.NewGlobalContext()
