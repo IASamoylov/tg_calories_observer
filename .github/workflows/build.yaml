@@ -14,8 +14,6 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_DB: ${{ env.APP_NAME }}
-          POSTGRES_USER: "postgres"
           POSTGRES_HOST_AUTH_METHOD: trust # docker-compose are using only for dev/integration tests
         options: >-
           --health-cmd pg_isready
@@ -49,6 +47,7 @@ jobs:
           LOCAL_BIN: ~/go/bin
           APP_POSTGRES_HOST: "localhost"
           APP_POSTGRES_PORT: ${{ env.APP_POSTGRES_PORT }}
+          APP_NAME: "postgres"
         run: make integration-test
       - name: Upload test reports
         if: always()
