@@ -78,6 +78,10 @@ bin-deps: .install-lint
 infra:
 	docker-compose -f ./.build/docker-compose.yaml up -d --force-recreate --wait
 
+.PHONY: infra-down
+infra-down:
+	docker-compose -f ./.build/docker-compose.yaml down
+
 .PHONY: migration-reset
 migration-reset:
 	$(LOCAL_BIN)/goose -dir "./migrations" "host=localhost user=${APP_POSTGRES_USER} password=${APP_POSTGRES_PASS} dbname=${APP_NAME} sslmode=${APP_POSTGRES_SSL_MODE}" reset
@@ -90,7 +94,7 @@ migration-up:
 migration: migration-reset migration-up
 
 .PHONY: migration-infra
-migration-infra: infra migration-reset migration-up
+migration-infra: infra migration
 
 # ==================================================================================== #
 # BUILD
