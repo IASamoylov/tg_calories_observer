@@ -6,8 +6,17 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/IASamoylov/tg_calories_observer/internal/app/services/message_routing"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/crypto"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/infrastructure/database"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/query/start"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/IASamoylov/tg_calories_observer/internal/app/query"
 	"github.com/IASamoylov/tg_calories_observer/internal/config"
 
 	debugv1 "github.com/IASamoylov/tg_calories_observer/internal/api/debug/v1"
@@ -31,19 +40,38 @@ type controllers struct {
 	telegram *telegramv1.Controller
 }
 
+type commands struct {
+}
+
+type queries struct {
+	routing *query.Routing
+	start   *start.Handler
+}
+
+type repositories struct {
+	user         database.UserRepository
+	securityUser database.SecurityUserRepository
+}
+
+type services struct {
+	messageRouting message_routing.Service
+}
+
 // App service
 type App struct {
 	context.Context
 	Cfg             *config.App
 	pool            *pgxpool.Pool
-	externalClients *externalClients
+	cryptor         *crypto.Cryptor
+	externalClients externalClients
 	clients         clients
-	// repositories
+	repositories    repositories
 	// clients
-	// services
-	// CQRS
+	services services
+	commands commands
+	queries  queries
 
-	controllers *controllers
+	controllers controllers
 	httpServer  *simpleserver.SimpleHTTPServer
 	closer      *multicloser.MultiCloser
 	ctx         context.Context
@@ -53,13 +81,11 @@ type App struct {
 type OverrideExternalClient func(app *App) *App
 
 // NewApp creates a new App with all dependencies
-func NewApp(ctx context.Context, port string, overrides ...OverrideExternalClient) *App {
+func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
 	app := &App{
-		ctx:             ctx,
-		Cfg:             config.NewConfig(),
-		closer:          multicloser.New(),
-		externalClients: &externalClients{},
-		controllers:     &controllers{},
+		ctx:    ctx,
+		Cfg:    config.NewConfig(),
+		closer: multicloser.New(),
 	}
 
 	// release resources that have been added globally
@@ -67,12 +93,18 @@ func NewApp(ctx context.Context, port string, overrides ...OverrideExternalClien
 		return multicloser.CloseGlobal()
 	}))
 
-	app.ApplyOverridesExternalClientConn(overrides...).
+	app.InitCryptor().
+		ApplyOverridesExternalClientConn(overrides...).
 		InitExternalClientsConnIfNotSet().
 		InitClients().
 		InitPgxConnection().
+		InitRepositories().
+		InitCommand().
+		InitQueries().
+		InitMenu().
+		InitServices().
 		InitControllers().
-		InitServer(port).
+		InitServer().
 		InitGracefulShutdown(os.Interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 
 	return app

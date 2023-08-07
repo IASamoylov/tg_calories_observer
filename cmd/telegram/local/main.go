@@ -20,10 +20,10 @@ import (
 func main() {
 	port, ok := os.LookupEnv("PORT")
 	if !ok {
-		port = "9090"
+		port = "9093"
 	}
 
-	app.NewApp(context.Background(), port, app.WithTelegramAPI(func(token string) types.TelegramBotAPI {
+	app.NewApp(context.Background(), app.WithTelegramAPI(func(token string) types.TelegramBotAPI {
 		api, err := tgbotapi.NewBotAPI(token)
 
 		if err != nil {
@@ -51,7 +51,6 @@ func main() {
 					return
 				default:
 					msg, err := json.Marshal(update)
-					log.Println(string(msg))
 					if err != nil {
 						log.Panicf("an error occurred when marshling a telegram message: %s", err.Error())
 					}
@@ -60,7 +59,7 @@ func main() {
 					// nolint
 					_, err = http.Post(host, "application/json", bytes.NewBuffer(msg))
 					if err != nil {
-						log.Panicf("an error occurred when send POST request: %s", err.Error())
+						log.Printf("an error occurred when send POST request: %s \n", err.Error())
 					}
 				}
 			}

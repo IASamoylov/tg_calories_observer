@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/crypto"
+
 	"github.com/IASamoylov/tg_calories_observer/internal/config/debug"
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/koanf"
 )
@@ -16,8 +18,10 @@ var (
 
 // App application configuration
 type App struct {
-	Postgres Postgres `koanf:"postgres"`
-	Telegram Telegram `koanf:"telegram"`
+	Port        string      `koanf:"port"`
+	Postgres    Postgres    `koanf:"postgres"`
+	Telegram    Telegram    `koanf:"telegram"`
+	CryptorKeys crypto.Keys `koanf:"keys"`
 }
 
 // NewConfig creates a new application configuration
@@ -27,7 +31,11 @@ func NewConfig() *App {
 	client := koanf.NewClient(
 		koanf.WithFileProvider(fmt.Sprintf("%s/config.json", Path)),
 		koanf.WithFileProvider(fmt.Sprintf("%s/%s.config.json", Path, debug.Version)),
-		koanf.WithEnvProvider("APP"),
+		koanf.WithEnvProvider("APP", map[string]func(string) any{
+			"APP_KEYS": func(value string) any {
+				return strings.Split(value, ",")
+			},
+		}),
 	)
 
 	if err := client.Unmarshal("", app); err != nil {

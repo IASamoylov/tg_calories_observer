@@ -11,6 +11,7 @@ BUILD_SHA_SHORT?=${BUILD_APP_VERSION}
 GOOSE_DRIVER=postgres
 APP_POSTGRES_USER?=postgres
 APP_POSTGRES_PASS?=
+APP_POSTGRES_PORT?=5432
 APP_POSTGRES_SSL_MODE?=prefer
 
 export PATH := $(PATH):${LOCAL_BIN}
@@ -54,13 +55,13 @@ help:
 # INSTALL DEPENDENCIES
 # ==================================================================================== #
 
-## bin-deps: installs the dependencies for the correct operation of the application
 .PHONY: .install-lint
 .install-lint:
 ifeq ($(wildcard $(LOCAL_BIN)/golangci-lint),)
 	GOPATH=LOCAL_BIN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
 endif
 
+## bin-deps: installs the dependencies for the correct operation of the application
 .PHONY: bin-deps
 bin-deps: .install-lint
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.10.0
@@ -74,21 +75,26 @@ bin-deps: .install-lint
 # INFRA
 # ==================================================================================== #
 
+## infra: starts ./.build/docker-compose.yaml with force recreate
 .PHONY: infra
 infra:
 	docker-compose -f ./.build/docker-compose.yaml up -d --force-recreate --wait
 
+## migration-reset: rollback migrations
 .PHONY: migration-reset
 migration-reset:
-	$(LOCAL_BIN)/goose -dir "./migrations" "host=localhost user=${APP_POSTGRES_USER} password=${APP_POSTGRES_PASS} dbname=${APP_NAME} sslmode=${APP_POSTGRES_SSL_MODE}" reset
+	$(LOCAL_BIN)/goose -dir "./migrations" "host=localhost user=${APP_POSTGRES_USER} dbname=${APP_NAME} port=${APP_POSTGRES_PORT} sslmode=${APP_POSTGRES_SSL_MODE} password=${APP_POSTGRES_PASS} " reset
 
+## migration-reset: apply migrations
 .PHONY: migration-up
 migration-up:
-	$(LOCAL_BIN)/goose -dir "./migrations" "host=localhost user=${APP_POSTGRES_USER} password=${APP_POSTGRES_PASS} dbname=${APP_NAME} sslmode=${APP_POSTGRES_SSL_MODE}" up
+	$(LOCAL_BIN)/goose -dir "./migrations" "host=localhost user=${APP_POSTGRES_USER} dbname=${APP_NAME} port=${APP_POSTGRES_PORT} sslmode=${APP_POSTGRES_SSL_MODE} password=${APP_POSTGRES_PASS} " up
 
+## migration-reset: rollback migrations and apply them after
 .PHONY: migration
 migration: migration-reset migration-up
 
+## migration-reset: launches the local environment environment in docker after which there is a rollback migrations and apply them after
 .PHONY: migration-infra
 migration-infra: infra migration
 

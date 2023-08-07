@@ -34,7 +34,11 @@ func TestMain(m *testing.M) {
 }
 
 func TestIntegration(t *testing.T) {
+	t.Parallel()
+
 	t.Run("DebugHandlerSuite", func(t *testing.T) {
+		t.Parallel()
+
 		suite.Run(t, &debug_handler.DebugHandlerSuite{GlobalContext: globalContext})
 	})
 }

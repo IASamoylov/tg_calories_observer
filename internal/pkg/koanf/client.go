@@ -25,10 +25,15 @@ func NewClient(providers ...WithProviders) *koanf.Koanf {
 }
 
 // WithEnvProvider includes configs from envs
-func WithEnvProvider(prefix string) func(*koanf.Koanf) {
+func WithEnvProvider(prefix string, parsers map[string]func(string) any) func(*koanf.Koanf) {
 	return func(client *koanf.Koanf) {
-		provider := envprovider.Provider(prefix, "_", func(s string) string {
-			return strings.ToLower(strings.TrimPrefix(s, fmt.Sprintf("%s_", prefix)))
+		provider := envprovider.ProviderWithValue(prefix, "_", func(key string, value string) (string, any) {
+			parser, ok := parsers[key]
+			if !ok {
+				return strings.ToLower(strings.TrimPrefix(key, fmt.Sprintf("%s_", prefix))), value
+			}
+
+			return strings.ToLower(strings.TrimPrefix(key, fmt.Sprintf("%s_", prefix))), parser(value)
 		})
 
 		if err := client.Load(provider, nil); err != nil {

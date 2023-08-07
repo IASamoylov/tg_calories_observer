@@ -6,6 +6,16 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/IASamoylov/tg_calories_observer/internal/app/services/message_routing"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/crypto"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/infrastructure/database"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/query"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/query/start"
+
 	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -26,17 +36,23 @@ func init() {
 	// TODO pgx scan with allow unknown columns
 }
 
+func (app *App) InitCryptor() *App {
+	app.cryptor = crypto.NewCryptor(app.Cfg.CryptorKeys)
+
+	return app
+}
+
 // InitControllers initializes REST handlers
 func (app *App) InitControllers() *App {
 	app.controllers.debug = debugv1.NewController()
-	app.controllers.telegram = telegramv1.NewController(app.externalClients.telegramBotAPI)
+	app.controllers.telegram = telegramv1.NewController(app.externalClients.telegramBotAPI, app.services.messageRouting)
 
 	return app
 }
 
 // InitServer initializes the web server to provide access via REST
-func (app *App) InitServer(port string) *App {
-	host := fmt.Sprintf(":%s", port)
+func (app *App) InitServer() *App {
+	host := fmt.Sprintf(":%s", app.Cfg.Port)
 
 	// optimizing the use of yandex cloud resources
 	var apiPrefix string
@@ -74,6 +90,17 @@ func (app *App) InitPgxConnection() *App {
 	return app
 }
 
+func (app *App) InitRepositories() *App {
+	user := database.NewUserRepository(app.pool)
+
+	app.repositories = repositories{
+		user:         user,
+		securityUser: database.NewSecurityUserRepository(user, app.cryptor),
+	}
+
+	return app
+}
+
 // InitExternalClientsConnIfNotSet initializes external services if they was not overridden for integration tests
 func (app *App) InitExternalClientsConnIfNotSet() *App {
 
@@ -91,9 +118,52 @@ func (app *App) InitExternalClientsConnIfNotSet() *App {
 	return app
 }
 
-// InitClients initializes external services if they was not overridden for integration tests
+// InitClients initializes external services if they were not overridden for integration tests
 func (app *App) InitClients() *App {
 	app.clients.telegramClient = telegram.NewTelegramClient(app.externalClients.telegramBotAPI)
+
+	return app
+}
+
+// InitCommand init queries for write only commands
+func (app *App) InitCommand() *App {
+	//app.commands = commands{
+	//	addFood: add_food.NewCommandHandler(),
+	//	addRow:  add_row.NewCommandHandler(),
+	//	routing: command.NewRouting(),
+	//}
+
+	return app
+}
+
+// InitQueries init queries for read only commands
+func (app *App) InitQueries() *App {
+	app.queries = queries{
+		routing: query.NewRouting(),
+	}
+
+	app.queries.start = start.NewQueryHandler()
+	app.queries.routing.Add(app.queries.start)
+
+	return app
+}
+
+func (app *App) InitMenu() *App {
+	if err := app.clients.telegramClient.InitMenu(app.queries.start); err != nil {
+		log.Println(fmt.Sprintf("[WARN] couldn't set up hints: %s", err))
+	}
+
+	return app
+}
+
+// InitServices init queries for read only commands
+func (app *App) InitServices() *App {
+	app.services.messageRouting = message_routing.NewService(
+		app.queries.routing,
+		nil,
+		app.clients.telegramClient,
+		app.repositories.securityUser,
+	)
 
 	return app
 }
