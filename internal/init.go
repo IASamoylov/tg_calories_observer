@@ -112,11 +112,12 @@ func (app *App) InitExternalClientsConnIfNotSet() *App {
 		}
 
 		app.externalClients.telegramBotAPI = api
-	}
 
-	logger.SetLogger(logger.New(telegramlogger.NewChannelErrorLoggerCore(
-		app.Cfg.Telegram.Support,
-		app.externalClients.telegramBotAPI)))
+		// только для полноценной интеграции с телеграммом будет подключен дополнительный логгер
+		logger.SetLogger(logger.New(telegramlogger.NewChannelErrorLoggerCore(
+			app.Cfg.Telegram.Support,
+			app.externalClients.telegramBotAPI)))
+	}
 
 	return app
 }
