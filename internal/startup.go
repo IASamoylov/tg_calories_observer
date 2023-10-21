@@ -94,8 +94,6 @@ func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
 		InitServer().
 		InitGracefulShutdown(os.Interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 
-	logger.Info("hello world")
-	logger.Error("hello world")
 	return app
 }
 

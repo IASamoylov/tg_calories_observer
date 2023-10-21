@@ -42,6 +42,7 @@ func SetLogLvl(lvl string) error {
 // New создает новый экземпляр zap.SugaredLogger
 func New(additionalCores ...zapcore.Core) *zap.SugaredLogger {
 	conf := zap.NewProductionEncoderConfig()
+	conf.TimeKey = "time"
 	conf.EncodeTime = zapcore.RFC3339TimeEncoder
 
 	baseCores := []zapcore.Core{
@@ -55,9 +56,6 @@ func New(additionalCores ...zapcore.Core) *zap.SugaredLogger {
 		With([]zap.Field{
 			{Key: "app_name", String: config.AppName, Type: zapcore.StringType},
 			{Key: "version", String: config.Version, Type: zapcore.StringType},
-			{Key: "build_time", String: config.BuildTime, Type: zapcore.StringType},
-			{Key: "github_sha", String: config.GithubSHA, Type: zapcore.StringType},
-			{Key: "github_sha_short", String: config.GithubSHAShort, Type: zapcore.StringType},
 		})
 
 	logger := zap.New(core)

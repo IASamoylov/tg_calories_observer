@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	telegramlogger "github.com/IASamoylov/tg_calories_observer/internal/pkg/logger/cores/telegram"
+
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/crypto"
@@ -111,6 +113,10 @@ func (app *App) InitExternalClientsConnIfNotSet() *App {
 
 		app.externalClients.telegramBotAPI = api
 	}
+
+	logger.SetLogger(logger.New(telegramlogger.NewChannelErrorLoggerCore(
+		app.Cfg.Telegram.Support,
+		app.externalClients.telegramBotAPI)))
 
 	return app
 }
