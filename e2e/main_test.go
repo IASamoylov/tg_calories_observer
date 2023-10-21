@@ -1,5 +1,5 @@
-//go:build integration_test
-// +build integration_test
+//go:build e2e
+// +build e2e
 
 package test_integration
 
@@ -9,9 +9,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/IASamoylov/tg_calories_observer/integration_test/debug_handler"
+	"github.com/IASamoylov/tg_calories_observer/e2e/debug_handler"
 
-	"github.com/IASamoylov/tg_calories_observer/integration_test/global"
+	"github.com/IASamoylov/tg_calories_observer/e2e/global"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/config"
 	"github.com/IASamoylov/tg_calories_observer/internal/config/debug"

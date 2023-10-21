@@ -1,5 +1,5 @@
-//go:build integration_test
-// +build integration_test
+//go:build e2e
+// +build e2e
 
 package debug_handler
 
@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/IASamoylov/tg_calories_observer/integration_test/global"
+	"github.com/IASamoylov/tg_calories_observer/e2e/global"
 	"github.com/IASamoylov/tg_calories_observer/internal/config/debug"
 
 	"github.com/stretchr/testify/suite"
@@ -35,7 +35,7 @@ func (s *DebugHandlerSuite) TestV1GetServiceInfo() {
 
 		debug.Version = "integration"
 		debug.AppName = "calories-observer-telegram-bot"
-		debug.GithubSHA = "f616bd7c833e745977d75b8107eeae0173a288ab"
+		debug.GithubSHA = "f616bd7c833e7423454365d75b8107eeae0173a288ab"
 		debug.GithubSHAShort = "f616bd7c"
 		debug.BuildTime = buildTime
 
@@ -52,7 +52,7 @@ func (s *DebugHandlerSuite) TestV1GetServiceInfo() {
 		s.EqualValues(map[string]string{
 			"version":          "integration",
 			"app_name":         "calories-observer-telegram-bot",
-			"github_sha":       "f616bd7c833e745977d75b8107eeae0173a288ab",
+			"github_sha":       "f616bd7c833e7423454365d75b8107eeae0173a288ab",
 			"github_sha_short": "f616bd7c",
 			"build_time":       buildTime,
 		}, debugInfo)

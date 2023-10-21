@@ -73,7 +73,7 @@ func TestCryptor(t *testing.T) {
 		assert.EqualValues(t, 2, cipher[len(cipher)-1:][0])
 
 		cryptor = NewCryptor(append(keys, newestKey...))
-		message, err := cryptor.Decrypt(cipher)
+		message, _ := cryptor.Decrypt(cipher)
 		assert.EqualValues(t, "Hello, world", message)
 
 	})

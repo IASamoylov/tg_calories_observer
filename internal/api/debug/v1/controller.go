@@ -5,6 +5,6 @@ type Controller struct {
 }
 
 // NewController ctor
-func NewController() *Controller {
-	return &Controller{}
+func NewController() Controller {
+	return Controller{}
 }

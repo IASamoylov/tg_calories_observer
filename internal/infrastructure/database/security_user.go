@@ -7,6 +7,7 @@ import (
 	"github.com/IASamoylov/tg_calories_observer/internal/domain"
 )
 
+// SecurityUserRepository ...
 type SecurityUserRepository struct {
 	userRepository UserRepository
 	cryptor        Cryptor

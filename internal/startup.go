@@ -2,21 +2,17 @@ package internal
 
 import (
 	"context"
-	"log"
 	"os"
 	"syscall"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/app/services/message_routing"
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/crypto"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/infrastructure/database"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/app/query/start"
-
-	"github.com/jackc/pgx/v5/pgxpool"
-
-	"github.com/IASamoylov/tg_calories_observer/internal/app/query"
 	"github.com/IASamoylov/tg_calories_observer/internal/config"
 
 	debugv1 "github.com/IASamoylov/tg_calories_observer/internal/api/debug/v1"
@@ -32,20 +28,15 @@ type externalClients struct {
 }
 
 type clients struct {
-	telegramClient *telegram.Client
+	telegramClient telegram.Client
 }
 
 type controllers struct {
-	debug    *debugv1.Controller
-	telegram *telegramv1.Controller
-}
-
-type commands struct {
+	debug    debugv1.Controller
+	telegram telegramv1.Controller
 }
 
 type queries struct {
-	routing *query.Routing
-	start   *start.Handler
 }
 
 type repositories struct {
@@ -54,24 +45,21 @@ type repositories struct {
 }
 
 type services struct {
-	messageRouting message_routing.Service
 }
 
 // App service
 type App struct {
 	context.Context
-	Cfg             *config.App
-	pool            *pgxpool.Pool
-	cryptor         *crypto.Cryptor
+	Cfg             config.App
+	cryptor         crypto.Cryptor
 	externalClients externalClients
 	clients         clients
 	repositories    repositories
-	// clients
-	services services
-	commands commands
-	queries  queries
-
+	services        services
+	//commands        commands
+	queries     queries
 	controllers controllers
+	pool        *pgxpool.Pool
 	httpServer  *simpleserver.SimpleHTTPServer
 	closer      *multicloser.MultiCloser
 	ctx         context.Context
@@ -89,9 +77,8 @@ func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
 	}
 
 	// release resources that have been added globally
-	app.closer.Add(multicloser.NewIOCloserWrap(func() error {
-		return multicloser.CloseGlobal()
-	}))
+	app.closer.Add(multicloser.GetGlobalCloser())
+	app.closer.Add(multicloser.NewIOCloserWrap(logger.Sync))
 
 	app.InitCryptor().
 		ApplyOverridesExternalClientConn(overrides...).
@@ -107,6 +94,8 @@ func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
 		InitServer().
 		InitGracefulShutdown(os.Interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 
+	logger.Info("hello world")
+	logger.Error("hello world")
 	return app
 }
 
@@ -115,5 +104,5 @@ func (app *App) Run() {
 	app.httpServer.Run()
 	app.closer.Wait()
 
-	log.Print("Server Stopped")
+	logger.Info("Server Stopped")
 }

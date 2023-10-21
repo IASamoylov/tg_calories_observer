@@ -1,19 +1,21 @@
 package graceful
 
 import (
-	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/signal"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
 )
+
+//go:generate mockgen -destination=mocks/mocks.go -package=mocks io Closer
 
 var done = make(chan os.Signal, 1)
 
 // Shutdown closes the resource after receiving a signal about the end of the application
 func Shutdown(closer io.Closer, signals ...os.Signal) {
 	if len(signals) == 0 {
-		log.Println("the signal to stop the application is not set")
+		logger.Info("the signal to stop the application is not set")
 
 		return
 	}
@@ -22,10 +24,10 @@ func Shutdown(closer io.Closer, signals ...os.Signal) {
 		defer close(done)
 		signal.Notify(done, signals...)
 		<-done
-		log.Println("an application shutdown signal was received")
+		logger.Info("an application shutdown signal was received")
 		signal.Stop(done)
 		if err := closer.Close(); err != nil {
-			log.Println(fmt.Sprintf("an error occurred when closing the resource: %s", err))
+			logger.Infof("an error occurred when closing the resource: %s", err)
 		}
 	}()
 }

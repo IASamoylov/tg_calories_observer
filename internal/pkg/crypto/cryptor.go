@@ -21,15 +21,15 @@ type Cryptor struct {
 }
 
 // NewCryptor ctor
-func NewCryptor(keys Keys) *Cryptor {
-	return &Cryptor{
+func NewCryptor(keys Keys) Cryptor {
+	return Cryptor{
 		keys:    keys,
 		lastKey: byte(len(keys) - 1),
 	}
 }
 
 // Encrypt encrypts the message
-func (tm *Cryptor) Encrypt(message []byte) ([]byte, error) {
+func (tm Cryptor) Encrypt(message []byte) ([]byte, error) {
 	key := tm.keys[tm.lastKey]
 	block, err := aes.NewCipher(key)
 
@@ -48,7 +48,7 @@ func (tm *Cryptor) Encrypt(message []byte) ([]byte, error) {
 }
 
 // Decrypt decrypts the message
-func (tm *Cryptor) Decrypt(encMessage []byte) ([]byte, error) {
+func (tm Cryptor) Decrypt(encMessage []byte) ([]byte, error) {
 	keyIdx := encMessage[len(encMessage)-1:][0]
 	encMessage = encMessage[:len(encMessage)-1]
 	key := tm.keys[keyIdx]

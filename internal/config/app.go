@@ -2,10 +2,10 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/crypto"
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/config/debug"
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/koanf"
@@ -25,8 +25,8 @@ type App struct {
 }
 
 // NewConfig creates a new application configuration
-func NewConfig() *App {
-	app := &App{}
+func NewConfig() App {
+	app := App{}
 
 	client := koanf.NewClient(
 		koanf.WithFileProvider(fmt.Sprintf("%s/config.json", Path)),
@@ -38,8 +38,8 @@ func NewConfig() *App {
 		}),
 	)
 
-	if err := client.Unmarshal("", app); err != nil {
-		log.Fatal(err)
+	if err := client.Unmarshal("", &app); err != nil {
+		logger.Fatalf("an error occurred while generating the application configuration: %s", err)
 	}
 
 	return app
@@ -69,5 +69,6 @@ func (cfg Postgres) Conn() string {
 
 // Telegram settings
 type Telegram struct {
-	Token string `koanf:"token"`
+	Token   string `koanf:"token"`
+	Support int64  `koanf:"support"`
 }

@@ -6,9 +6,9 @@ import (
 	"github.com/IASamoylov/tg_calories_observer/internal/domain"
 )
 
+// UserRepository ...
 type UserRepository struct {
 	PgxPool
-	cryptor Cryptor
 }
 
 // NewUserRepository ctor

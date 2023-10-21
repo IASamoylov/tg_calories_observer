@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
 )
 
 // SimpleHTTPServer HTTP server
@@ -55,11 +56,11 @@ func (server *SimpleHTTPServer) Run() {
 	go func() {
 		err := server.base.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Println(fmt.Sprintf("an error occurred while executing http.Server.ListenAndServe: %s ", err))
+			logger.Infof("an error occurred while executing http.Server.ListenAndServe: %s ", err)
 		}
 	}()
 
-	log.Println(fmt.Sprintf("HTTP server stated on host %s", server.base.Addr))
+	logger.Infof("HTTP server stated on host %s", server.base.Addr)
 }
 
 // Close stops server

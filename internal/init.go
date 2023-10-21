@@ -2,19 +2,14 @@ package internal
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/app/services/message_routing"
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/crypto"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/infrastructure/database"
-
-	"github.com/IASamoylov/tg_calories_observer/internal/app/query"
-
-	"github.com/IASamoylov/tg_calories_observer/internal/app/query/start"
 
 	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
 
@@ -36,6 +31,7 @@ func init() {
 	// TODO pgx scan with allow unknown columns
 }
 
+// InitCryptor initializes for encrypt user info
 func (app *App) InitCryptor() *App {
 	app.cryptor = crypto.NewCryptor(app.Cfg.CryptorKeys)
 
@@ -45,7 +41,7 @@ func (app *App) InitCryptor() *App {
 // InitControllers initializes REST handlers
 func (app *App) InitControllers() *App {
 	app.controllers.debug = debugv1.NewController()
-	app.controllers.telegram = telegramv1.NewController(app.externalClients.telegramBotAPI, app.services.messageRouting)
+	app.controllers.telegram = telegramv1.NewController(app.externalClients.telegramBotAPI)
 
 	return app
 }
@@ -73,7 +69,7 @@ func (app *App) InitServer() *App {
 func (app *App) InitPgxConnection() *App {
 	pool, err := pgxpool.New(app.ctx, app.Cfg.Postgres.Conn())
 	if err != nil {
-		log.Panicf("an error occurred when creating a pool of connections to the database: %s", err.Error())
+		logger.Panicf("an error occurred when creating a pool of connections to the database: %s", err.Error())
 	}
 	app.closer.Add(multicloser.NewIOCloserWrap(func() error {
 		pool.Close()
@@ -82,7 +78,7 @@ func (app *App) InitPgxConnection() *App {
 	}))
 
 	if err = pool.Ping(app.ctx); err != nil {
-		log.Panicf("an error occurred when picking the database: %s", err.Error())
+		logger.Panicf("an error occurred when picking the database: %s", err.Error())
 	}
 
 	app.pool = pool
@@ -90,6 +86,7 @@ func (app *App) InitPgxConnection() *App {
 	return app
 }
 
+// InitRepositories initializes the repository to work with postgres
 func (app *App) InitRepositories() *App {
 	user := database.NewUserRepository(app.pool)
 
@@ -109,7 +106,7 @@ func (app *App) InitExternalClientsConnIfNotSet() *App {
 		api, err := tgbotapi.NewBotAPI(app.Cfg.Telegram.Token)
 
 		if err != nil {
-			log.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
+			logger.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
 		}
 
 		app.externalClients.telegramBotAPI = api
@@ -125,7 +122,7 @@ func (app *App) InitClients() *App {
 	return app
 }
 
-// InitCommand init queries for write only commands
+// InitCommand initializes queries for write only commands
 func (app *App) InitCommand() *App {
 	//app.commands = commands{
 	//	addFood: add_food.NewCommandHandler(),
@@ -136,35 +133,21 @@ func (app *App) InitCommand() *App {
 	return app
 }
 
-// InitQueries init queries for read only commands
+// InitQueries initializes queries for read only commands
 func (app *App) InitQueries() *App {
-	app.queries = queries{
-		routing: query.NewRouting(),
-	}
-
-	app.queries.start = start.NewQueryHandler()
-	app.queries.routing.Add(app.queries.start)
+	app.queries = queries{}
 
 	return app
 }
 
+// InitMenu initializes hints in telegram
+// https://core.telegram.org/bots/features#commands
 func (app *App) InitMenu() *App {
-	if err := app.clients.telegramClient.InitMenu(app.queries.start); err != nil {
-		log.Println(fmt.Sprintf("[WARN] couldn't set up hints: %s", err))
-	}
-
 	return app
 }
 
 // InitServices init queries for read only commands
 func (app *App) InitServices() *App {
-	app.services.messageRouting = message_routing.NewService(
-		app.queries.routing,
-		nil,
-		app.clients.telegramClient,
-		app.repositories.securityUser,
-	)
-
 	return app
 }
 

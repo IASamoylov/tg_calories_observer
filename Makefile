@@ -36,7 +36,7 @@ GO_UNIT_TEST_DIRECTORY:=./internal/...
 GO_UNIT_TEST_COVER_PKG:=${GO_TEST_DIRECTORY}
 GO_UNIT_TEST_COVER_EXCLUDE:=mocks
 
-GO_INTEGRATION_TEST_DIRECTORY:=./integration_test/...
+GO_INTEGRATION_TEST_DIRECTORY:=./e2e/...
 GO_INTEGRATION_TEST_COVER_PKG:=${GO_UNIT_TEST_DIRECTORY}
 GO_INTEGRATION_TEST_COVER_EXCLUDE:=mocks
 
@@ -65,7 +65,7 @@ endif
 .PHONY: bin-deps
 bin-deps: .install-lint
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.10.0
-	GOBIN=$(LOCAL_BIN) go install github.com/golang/mock/mockgen@v1.6.0
+	GOBIN=$(LOCAL_BIN) go install go.uber.org/mock/mockgen@latest
 	GOBIN=$(LOCAL_BIN) go install gotest.tools/gotestsum@latest
 	GOBIN=$(LOCAL_BIN) go install github.com/wadey/gocovmerge@latest
 	go get github.com/golang/mock/mockgen
@@ -85,16 +85,16 @@ infra:
 migration-reset:
 	$(LOCAL_BIN)/goose -dir "./migrations" "host=localhost user=${APP_POSTGRES_USER} dbname=${APP_NAME} port=${APP_POSTGRES_PORT} sslmode=${APP_POSTGRES_SSL_MODE} password=${APP_POSTGRES_PASS} " reset
 
-## migration-reset: apply migrations
+## migration-up: apply migrations
 .PHONY: migration-up
 migration-up:
 	$(LOCAL_BIN)/goose -dir "./migrations" "host=localhost user=${APP_POSTGRES_USER} dbname=${APP_NAME} port=${APP_POSTGRES_PORT} sslmode=${APP_POSTGRES_SSL_MODE} password=${APP_POSTGRES_PASS} " up
 
-## migration-reset: rollback migrations and apply them after
+## migration: rollback migrations and apply them after
 .PHONY: migration
 migration: migration-reset migration-up
 
-## migration-reset: launches the local environment environment in docker after which there is a rollback migrations and apply them after
+## migration-infra: launches the local environment environment in docker after which there is a rollback migrations and apply them after
 .PHONY: migration-infra
 migration-infra: infra migration
 
@@ -156,14 +156,14 @@ test:
 
 
 ## integration-test: runs integration tests via gotestsum with coverage
-.PHONY: integration-test
-integration-test: 
+.PHONY: e2e
+e2e:
 	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
 		--format testname \
 		--packages $(GO_INTEGRATION_TEST_DIRECTORY) \
 		--junitfile $(GO_INTEGRATION_TEST_REPORT) \
 		--junitfile-testcase-classname relative \
-		-- -tags=integration_test -cover -covermode=count -coverprofile=$(GO_INTEGRATION_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_INTEGRATION_TEST_COVER_PKG)
+		-- -tags=e2e -cover -covermode=count -coverprofile=$(GO_INTEGRATION_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_INTEGRATION_TEST_COVER_PKG)
 	grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GO_INTEGRATION_TEST_COVER_PROFILE)
 	rm $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp
 
@@ -172,21 +172,21 @@ integration-test:
 cg-test: codegen test
 
 ## cg-integration-test: runs codegen before integration-test
-.PHONY: cg-integration-test
-cg-integration-test: codegen integration-test
+.PHONY: cg-e2e
+cg-integration-test: codegen e2e
 
-## cover: runs web display of coverage report
+## cover: runs web display of coverage report for unit tests
 .PHONY: cover
 cover: test
 	go tool cover -html=$(GO_UNIT_TEST_COVER_PROFILE)
 
-## cover: runs web display of coverage report
-.PHONY: integration-cover
-integration-cover: integration-test
+## integration-cover: runs web display of coverage report for integration tests
+.PHONY: e2e-cover
+e2e-cover: e2e
 	go tool cover -html=$(GO_INTEGRATION_TEST_COVER_PROFILE)
 
 
-## cover: runs web display of coverage report
+## merge-cover: integration tests and unit tests coverage report
 .PHONY: merge-cover
 merge-cover:
 	$(LOCAL_BIN)/gocovmerge ./$(GO_UNIT_TEST_COVER_PROFILE) ./$(GO_INTEGRATION_TEST_COVER_PROFILE) > $(GO_TEST_COVER_PROFILE)
