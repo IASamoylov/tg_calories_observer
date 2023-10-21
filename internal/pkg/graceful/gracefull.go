@@ -12,10 +12,10 @@ import (
 
 var done = make(chan os.Signal, 1)
 
-// Shutdown closes the resource after receiving a signal about the end of the application
+// Shutdown закрывает неуправляемый ресурс при получения сигнала об остановке приложения
 func Shutdown(closer io.Closer, signals ...os.Signal) {
 	if len(signals) == 0 {
-		logger.Info("the signal to stop the application is not set")
+		logger.Info("не перечсилены сигналы при срабатывание, которых необходимо остановить обработку")
 
 		return
 	}
@@ -24,10 +24,10 @@ func Shutdown(closer io.Closer, signals ...os.Signal) {
 		defer close(done)
 		signal.Notify(done, signals...)
 		<-done
-		logger.Info("an application shutdown signal was received")
+		logger.Info("получени сигнал о закрытие приложения, все не управляемые ресурсы будут остановлены")
 		signal.Stop(done)
 		if err := closer.Close(); err != nil {
-			logger.Infof("an error occurred when closing the resource: %s", err)
+			logger.Warn(err.Error())
 		}
 	}()
 }

@@ -3,7 +3,6 @@ package internal
 import (
 	"fmt"
 	"net/http"
-	"os"
 
 	telegramlogger "github.com/IASamoylov/tg_calories_observer/internal/pkg/logger/cores/telegram"
 
@@ -25,7 +24,6 @@ import (
 	telegramv1 "github.com/IASamoylov/tg_calories_observer/internal/api/telegram/v1"
 	"github.com/IASamoylov/tg_calories_observer/internal/clients/telegram"
 	config "github.com/IASamoylov/tg_calories_observer/internal/config/debug"
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/graceful"
 	simpleserver "github.com/IASamoylov/tg_calories_observer/internal/pkg/simple_server"
 )
 
@@ -33,14 +31,14 @@ func init() {
 	// TODO pgx scan with allow unknown columns
 }
 
-// InitCryptor initializes for encrypt user info
+// InitCryptor инцилизирует шифровальщик, который позволяет скрыть персональные данные.
 func (app *App) InitCryptor() *App {
 	app.cryptor = crypto.NewCryptor(app.Cfg.CryptorKeys)
 
 	return app
 }
 
-// InitControllers initializes REST handlers
+// InitControllers инцилизирует ручки сервиса.
 func (app *App) InitControllers() *App {
 	app.controllers.debug = debugv1.NewController()
 	app.controllers.telegram = telegramv1.NewController(app.externalClients.telegramBotAPI)
@@ -48,7 +46,8 @@ func (app *App) InitControllers() *App {
 	return app
 }
 
-// InitServer initializes the web server to provide access via REST
+// InitServer инцилизирует REST пути и связывает их с ручками сервиса.
+// Зависит от вызова метода InitControllers.
 func (app *App) InitServer() *App {
 	host := fmt.Sprintf(":%s", app.Cfg.Port)
 
@@ -67,7 +66,7 @@ func (app *App) InitServer() *App {
 	return app
 }
 
-// InitPgxConnection initializes the pgx driver to connect to postgres
+// InitPgxConnection инцилизирует pgx для подключения к базе postgres.
 func (app *App) InitPgxConnection() *App {
 	pool, err := pgxpool.New(app.ctx, app.Cfg.Postgres.Conn())
 	if err != nil {
@@ -88,21 +87,19 @@ func (app *App) InitPgxConnection() *App {
 	return app
 }
 
-// InitRepositories initializes the repository to work with postgres
+// InitRepositories инцилизирует репозитории для работы с таблицами базы данных.
+// Зависит от вызова методов InitPgxConnection и InitCryptor.
 func (app *App) InitRepositories() *App {
-	user := database.NewUserRepository(app.pool)
-
 	app.repositories = repositories{
-		user:         user,
-		securityUser: database.NewSecurityUserRepository(user, app.cryptor),
+		user: database.NewSecurityUserRepository(database.NewUserRepository(app.pool), app.cryptor),
 	}
 
 	return app
 }
 
-// InitExternalClientsConnIfNotSet initializes external services if they was not overridden for integration tests
+// InitExternalClientsConnIfNotSet инцилизирует подключения к внешним сервис (API)
+// под средством протоколов http/gRPC и других. Могут быть переопределены на старте приложения.
 func (app *App) InitExternalClientsConnIfNotSet() *App {
-
 	if app.externalClients.telegramBotAPI == nil {
 		// https://core.telegram.org/bots/webhooks#testing-your-bot-with-updates
 		api, err := tgbotapi.NewBotAPI(app.Cfg.Telegram.Token)
@@ -122,43 +119,20 @@ func (app *App) InitExternalClientsConnIfNotSet() *App {
 	return app
 }
 
-// InitClients initializes external services if they were not overridden for integration tests
+// InitClients инцлизиирует клиенты для взаимодействия с внешними API. Клиенты предоставляют удобный
+// функционал для взаимодействия с API. Зависит от вызова метода InitExternalClientsConnIfNotSet.
 func (app *App) InitClients() *App {
 	app.clients.telegramClient = telegram.NewTelegramClient(app.externalClients.telegramBotAPI)
 
 	return app
 }
 
-// InitCommand initializes queries for write only commands
-func (app *App) InitCommand() *App {
-	//app.commands = commands{
-	//	addFood: add_food.NewCommandHandler(),
-	//	addRow:  add_row.NewCommandHandler(),
-	//	routing: command.NewRouting(),
-	//}
-
-	return app
-}
-
-// InitQueries initializes queries for read only commands
-func (app *App) InitQueries() *App {
-	app.queries = queries{}
-
-	return app
-}
-
-// InitMenu initializes hints in telegram
-// https://core.telegram.org/bots/features#commands
-func (app *App) InitMenu() *App {
-	return app
-}
-
-// InitServices init queries for read only commands
+// InitServices инцилизирует сервисы, адаптеры.
 func (app *App) InitServices() *App {
 	return app
 }
 
-// ApplyOverridesExternalClientConn overrides to be able to test the application in isolation from other systems
+// ApplyOverridesExternalClientConn переопределяет внешние API для возможность изоляционного тестирования (e2e) сервиса.
 func (app *App) ApplyOverridesExternalClientConn(overrides ...OverrideExternalClient) *App {
 	for _, override := range overrides {
 		app = override(app)
@@ -167,14 +141,8 @@ func (app *App) ApplyOverridesExternalClientConn(overrides ...OverrideExternalCl
 	return app
 }
 
-// InitGracefulShutdown initializes the graceful shutdown for the application
-func (app *App) InitGracefulShutdown(signals ...os.Signal) *App {
-	graceful.Shutdown(app.closer, signals...)
-
-	return app
-}
-
-// WithTelegramAPI creates service with specific telegram API client
+// WithTelegramAPI переопределяет клиент для взаимодействия с telegram API. Для локально разработки используется
+// преобразование long pooling в web hook
 func WithTelegramAPI(ctor func(token string) types.TelegramBotAPI) OverrideExternalClient {
 	return func(app *App) *App {
 		app.externalClients.telegramBotAPI = ctor(app.Cfg.Telegram.Token)

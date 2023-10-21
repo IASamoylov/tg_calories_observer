@@ -15,22 +15,25 @@ func init() {
 	SetGlobalCloser(New())
 }
 
-// IOCloserWrap wraps any close function to convert to the io.Closer type
+// CloserFunc ...
+type CloserFunc func() error
+
+// IOCloserWrap врапер, позволяющие привести функцию вида CloserFunc к io.Closer
 type IOCloserWrap struct {
-	close func() error
+	close CloserFunc
 }
 
 // NewIOCloserWrap ctor
-func NewIOCloserWrap(close func() error) io.Closer {
+func NewIOCloserWrap(close CloserFunc) io.Closer {
 	return &IOCloserWrap{close: close}
 }
 
-// Close releases resources
+// Close закрывает зарегистрированый ресурс
 func (closer IOCloserWrap) Close() error {
 	return closer.close()
 }
 
-// MultiCloser closes all resources that should be closed
+// MultiCloser освобождает все ресурсы, которые должны быть закрыты
 type MultiCloser struct {
 	mutex             sync.Mutex
 	once              sync.Once
@@ -38,39 +41,39 @@ type MultiCloser struct {
 	allResourceClosed chan struct{}
 }
 
-// New creates a new multi closer
+// New ctor
 func New() *MultiCloser {
 	return &MultiCloser{
 		allResourceClosed: make(chan struct{}),
 	}
 }
 
-// SetGlobalCloser set a new  multi closer
+// SetGlobalCloser устанвливает новый комплексный обработчик освобожения ресурсов
 func SetGlobalCloser(multiCloser *MultiCloser) {
 	globalCloser = multiCloser
 }
 
-// GetGlobalCloser get a global multi closer
+// GetGlobalCloser возвращает текущий комплексный обработчик освобожения ресурсов
 func GetGlobalCloser() *MultiCloser {
 	return globalCloser
 }
 
-// AddGlobal adds resource than need to close for global multi closer
+// AddGlobal добавляет ресурс, который должен быть закрыт в глобальный обработчик
 func AddGlobal(closers ...io.Closer) {
 	globalCloser.Add(closers...)
 }
 
-// CloseGlobal closes all resources registered in global multi closer
+// CloseGlobal завершает работу всех ресурсов зарегистрированных ранее
 func CloseGlobal() error {
 	return globalCloser.Close()
 }
 
-// WaitGlobal waits for all resource are closed in global multi closer
+// WaitGlobal ожидает пока все ресурсы не будут закрыты
 func WaitGlobal() {
 	globalCloser.Wait()
 }
 
-// Add adds resource than need to close
+// Add добавляет ресурс, который должен быть закрыт
 func (multiCloser *MultiCloser) Add(closers ...io.Closer) {
 	multiCloser.mutex.Lock()
 	defer multiCloser.mutex.Unlock()
@@ -78,7 +81,7 @@ func (multiCloser *MultiCloser) Add(closers ...io.Closer) {
 	multiCloser.closers = append(multiCloser.closers, closers...)
 }
 
-// Close all resources registered in global multi closer
+// Close завершает работу всех ресурсов зарегистрированных ранее
 func (multiCloser *MultiCloser) Close() (err error) {
 	multiCloser.once.Do(func() {
 		defer close(multiCloser.allResourceClosed)
@@ -95,7 +98,7 @@ func (multiCloser *MultiCloser) Close() (err error) {
 			closer := closer
 			go func() {
 				if err := closer.Close(); err != nil {
-					errsCh <- fmt.Errorf("an error occurred when closing the resource %T: %s", closer, err)
+					errsCh <- fmt.Errorf("произошла ошибка в момент завершения работы ресурса %T: %s", closer, err)
 				} else {
 					errsCh <- nil
 				}
@@ -113,7 +116,7 @@ func (multiCloser *MultiCloser) Close() (err error) {
 	return err
 }
 
-// Wait waits for all resource are closed
+// Wait ожидает пока все ресурсы не будут закрыты
 func (multiCloser *MultiCloser) Wait() {
 	<-multiCloser.allResourceClosed
 }

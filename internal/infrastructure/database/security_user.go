@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/domain"
+	"github.com/IASamoylov/tg_calories_observer/internal/domain/dto"
 )
 
 // SecurityUserRepository ...
@@ -18,8 +18,9 @@ func NewSecurityUserRepository(userRepository UserRepository, cryptor Cryptor) S
 	return SecurityUserRepository{userRepository: userRepository, cryptor: cryptor}
 }
 
-// UpsertAndGet creates or updates the user and returns his internal system ID
-func (rep SecurityUserRepository) UpsertAndGet(ctx context.Context, user domain.User) (domain.User, error) {
+// UpsertAndGet шифрует персональные данные пользователя перед тем как созданить или обновить
+// и возвращает текущего пользователя
+func (rep SecurityUserRepository) UpsertAndGet(ctx context.Context, user dto.User) (dto.User, error) {
 	userName, err := rep.cryptor.Encrypt([]byte(user.UserName()))
 	if err != nil {
 		return user, err
@@ -33,7 +34,7 @@ func (rep SecurityUserRepository) UpsertAndGet(ctx context.Context, user domain.
 		return user, err
 	}
 
-	newUser, err := rep.userRepository.UpsertAndGet(ctx, domain.NewDefaultUser(
+	newUser, err := rep.userRepository.UpsertAndGet(ctx, dto.NewDefaultUser(
 		user.TelegramID(),
 		hex.EncodeToString(userName),
 		hex.EncodeToString(firstName),
@@ -41,7 +42,7 @@ func (rep SecurityUserRepository) UpsertAndGet(ctx context.Context, user domain.
 		user.Language(),
 	))
 
-	return domain.NewUser(
+	return dto.NewUser(
 		newUser.ID(),
 		user.TelegramID(),
 		user.UserName(),

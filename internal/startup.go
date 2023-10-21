@@ -5,6 +5,8 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/graceful"
+
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -36,18 +38,14 @@ type controllers struct {
 	telegram telegramv1.Controller
 }
 
-type queries struct {
-}
-
 type repositories struct {
-	user         database.UserRepository
-	securityUser database.SecurityUserRepository
+	user database.SecurityUserRepository
 }
 
 type services struct {
 }
 
-// App service
+// App ...
 type App struct {
 	context.Context
 	Cfg             config.App
@@ -56,19 +54,19 @@ type App struct {
 	clients         clients
 	repositories    repositories
 	services        services
-	//commands        commands
-	queries     queries
-	controllers controllers
-	pool        *pgxpool.Pool
-	httpServer  *simpleserver.SimpleHTTPServer
-	closer      *multicloser.MultiCloser
-	ctx         context.Context
+	controllers     controllers
+	pool            *pgxpool.Pool
+	httpServer      *simpleserver.SimpleHTTPServer
+	closer          *multicloser.MultiCloser
+	ctx             context.Context
 }
 
-// OverrideExternalClient functions to replace an external clients with mocks for integration tests
+// OverrideExternalClient функциония позволяющая переопределить компонент системы,
+// переопределяет только внешние клиенты. Удобно при использование е2е тестов чтобы
+// не использовать реальные внешние сервисы, а моки.
 type OverrideExternalClient func(app *App) *App
 
-// NewApp creates a new App with all dependencies
+// NewApp создает новое приеложение инцилизирая все зависимости последовательно
 func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
 	app := &App{
 		ctx:    ctx,
@@ -76,7 +74,7 @@ func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
 		closer: multicloser.New(),
 	}
 
-	// release resources that have been added globally
+	// регистриуем освобождение глобальные ресурсов
 	app.closer.Add(multicloser.GetGlobalCloser())
 	app.closer.Add(multicloser.NewIOCloserWrap(logger.Sync))
 
@@ -86,18 +84,17 @@ func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
 		InitClients().
 		InitPgxConnection().
 		InitRepositories().
-		InitCommand().
-		InitQueries().
-		InitMenu().
 		InitServices().
 		InitControllers().
-		InitServer().
-		InitGracefulShutdown(os.Interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+		InitServer()
+
+	// регистрируем
+	graceful.Shutdown(app.closer, os.Interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 
 	return app
 }
 
-// Run starts server
+// Run запускает сервер
 func (app *App) Run() {
 	app.httpServer.Run()
 	app.closer.Wait()

@@ -7,14 +7,14 @@ import (
 	"errors"
 )
 
-// Key describes key of Encryption
+// Key ключ шифрования
 type Key []byte
 
-// Keys slice of Key
+// Keys список ключей шифрования
 type Keys []Key
 
-// Cryptor encryptor and decriptor and implemented AES Encryption with IV
-// based on article https://ru.stackoverflow.com/a/863358
+// Cryptor шифратор и дешифратор реализует AES шифрвоние с IV
+// реализован на основание статьи https://ru.stackoverflow.com/a/863358
 type Cryptor struct {
 	keys    Keys
 	lastKey byte
@@ -28,7 +28,7 @@ func NewCryptor(keys Keys) Cryptor {
 	}
 }
 
-// Encrypt encrypts the message
+// Encrypt зашифровать сообщение
 func (tm Cryptor) Encrypt(message []byte) ([]byte, error) {
 	key := tm.keys[tm.lastKey]
 	block, err := aes.NewCipher(key)
@@ -47,7 +47,7 @@ func (tm Cryptor) Encrypt(message []byte) ([]byte, error) {
 	return append(encMessage, tm.lastKey), nil
 }
 
-// Decrypt decrypts the message
+// Decrypt дешифровать сообщение
 func (tm Cryptor) Decrypt(encMessage []byte) ([]byte, error) {
 	keyIdx := encMessage[len(encMessage)-1:][0]
 	encMessage = encMessage[:len(encMessage)-1]

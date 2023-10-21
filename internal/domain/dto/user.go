@@ -1,4 +1,4 @@
-package domain
+package dto
 
 // TelegramID ...
 type TelegramID int64

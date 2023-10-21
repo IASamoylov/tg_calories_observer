@@ -27,16 +27,7 @@ func SetLogger(logger *zap.SugaredLogger) {
 
 // SetLogLvl переопределяет минимальный уровень логирования
 func SetLogLvl(lvl string) error {
-	err := defaultLvl.UnmarshalText([]byte(lvl))
-
-	if err != nil {
-		Error("failed to set log level as "+lvl, "reason", err.Error())
-		Warn("log level is set as ", defaultLvl.String())
-	} else {
-		Debug("log level was successfully set as " + lvl)
-	}
-
-	return err
+	return defaultLvl.UnmarshalText([]byte(lvl))
 }
 
 // New создает новый экземпляр zap.SugaredLogger
@@ -46,7 +37,6 @@ func New(additionalCores ...zapcore.Core) *zap.SugaredLogger {
 	conf.EncodeTime = zapcore.RFC3339TimeEncoder
 
 	baseCores := []zapcore.Core{
-		// json console logger
 		zapcore.NewCore(zapcore.NewJSONEncoder(conf), zapcore.AddSync(os.Stdout), defaultLvl),
 	}
 

@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/domain"
+	"github.com/IASamoylov/tg_calories_observer/internal/domain/dto"
 )
 
 // UserRepository ...
@@ -16,8 +16,9 @@ func NewUserRepository(pool PgxPool) UserRepository {
 	return UserRepository{PgxPool: pool}
 }
 
-// UpsertAndGet creates or updates the user and returns his internal system ID
-func (rep UserRepository) UpsertAndGet(ctx context.Context, user domain.User) (domain.User, error) {
+// UpsertAndGet создает нового или обновляет существующего пользователя в базе данных по его внутреннему ID
+// и возвращает текущего пользователя
+func (rep UserRepository) UpsertAndGet(ctx context.Context, user dto.User) (dto.User, error) {
 	sql := `insert into "user" (telegram_id, user_name, first_name, last_name, language)
 			values ($1, $2, $3, $4, $5)
 			on conflict (telegram_id) do update set user_name  = excluded.user_name,
@@ -41,7 +42,7 @@ func (rep UserRepository) UpsertAndGet(ctx context.Context, user domain.User) (d
 		return user, err
 	}
 
-	return domain.NewUser(
+	return dto.NewUser(
 		userID,
 		user.TelegramID(),
 		user.UserName(),

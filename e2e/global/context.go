@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/domain"
+	"github.com/IASamoylov/tg_calories_observer/internal/domain/dto"
 
 	_ "github.com/lib/pq"
 
@@ -102,6 +102,6 @@ func (c *Context) WaitForRun() {
 	wg.Wait()
 }
 
-func (c *Context) NextTelegramUserID() domain.TelegramID {
-	return domain.TelegramID(atomic.AddInt64(&c.telegramUserID, 10))
+func (c *Context) NextTelegramUserID() dto.TelegramID {
+	return dto.TelegramID(atomic.AddInt64(&c.telegramUserID, 10))
 }

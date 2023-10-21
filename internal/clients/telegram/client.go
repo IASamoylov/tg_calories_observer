@@ -21,7 +21,7 @@ func (client Client) SendMsg(recipient int64, text string) error {
 	return nil
 }
 
-// NewTelegramClient creates a new telegram client for receving and sending messages
+// NewTelegramClient создает клиент для отправки сообщение
 func NewTelegramClient(api types.TelegramBotAPI) Client {
 	client := Client{bot: api}
 

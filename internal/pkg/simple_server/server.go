@@ -16,7 +16,7 @@ type SimpleHTTPServer struct {
 	base      http.Server
 }
 
-// NewHTTPServer creates simple server
+// NewHTTPServer создает простой сервер
 func NewHTTPServer(host, apiPrefix string) *SimpleHTTPServer {
 	return &SimpleHTTPServer{
 		apiPrefix: apiPrefix,
@@ -29,7 +29,7 @@ func NewHTTPServer(host, apiPrefix string) *SimpleHTTPServer {
 	}
 }
 
-// Register registers a handler for the path
+// Register добавляет HTTP обработчик по заявленому пути
 func (server *SimpleHTTPServer) Register(
 	method string,
 	path string,
@@ -51,23 +51,19 @@ func (server *SimpleHTTPServer) Register(
 	return server
 }
 
-// Run starts a new server in goroutine
+// Run запускает сервер
 func (server *SimpleHTTPServer) Run() {
 	go func() {
 		err := server.base.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Infof("an error occurred while executing http.Server.ListenAndServe: %s ", err)
+			logger.Infof("произошла ошибка при ралоте сервера: %s", err)
 		}
 	}()
 
-	logger.Infof("HTTP server stated on host %s", server.base.Addr)
+	logger.Infof("HTTP сервер запущен на хосте %s", server.base.Addr)
 }
 
-// Close stops server
+// Close останавливат сервер
 func (server *SimpleHTTPServer) Close() error {
-	if err := server.base.Shutdown(context.Background()); err != nil {
-		return fmt.Errorf("an error occurred while executing http.Server.Shutdown: %s ", err)
-	}
-
-	return nil
+	return server.base.Shutdown(context.Background())
 }

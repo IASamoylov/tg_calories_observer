@@ -14,7 +14,7 @@ import (
 // WithProviders adds config provider
 type WithProviders func(*koanf.Koanf)
 
-// NewClient creates a new, pre-configured Koanf client for working with configs
+// NewClient создае новый, пред-настроенный Koanf клиент для работы с конфигами
 func NewClient(providers ...WithProviders) *koanf.Koanf {
 	client := koanf.New(".")
 	for _, apply := range providers {
@@ -24,7 +24,7 @@ func NewClient(providers ...WithProviders) *koanf.Koanf {
 	return client
 }
 
-// WithEnvProvider includes configs from envs
+// WithEnvProvider провайдер для работы с перемеными окружения
 func WithEnvProvider(prefix string, parsers map[string]func(string) any) func(*koanf.Koanf) {
 	return func(client *koanf.Koanf) {
 		provider := envprovider.ProviderWithValue(prefix, "_", func(key string, value string) (string, any) {
@@ -42,7 +42,7 @@ func WithEnvProvider(prefix string, parsers map[string]func(string) any) func(*k
 	}
 }
 
-// WithFileProvider include configs from files
+// WithFileProvider провайдер для работы с файлами конфигурации
 func WithFileProvider(path string) func(*koanf.Koanf) {
 	return func(client *koanf.Koanf) {
 		provider := fileprovider.Provider(path)
