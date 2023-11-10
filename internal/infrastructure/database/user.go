@@ -3,31 +3,31 @@ package database
 import (
 	"context"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/domain/dto"
+	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/domain/entity/dto"
 )
 
 // UserRepository ...
 type UserRepository struct {
-	PgxPool
+	types.PgxPool
 }
 
 // NewUserRepository ctor
-func NewUserRepository(pool PgxPool) UserRepository {
+func NewUserRepository(pool types.PgxPool) UserRepository {
 	return UserRepository{PgxPool: pool}
 }
 
-// UpsertAndGet создает нового или обновляет существующего пользователя в базе данных по его внутреннему ID
-// и возвращает текущего пользователя
-func (rep UserRepository) UpsertAndGet(ctx context.Context, user dto.User) (dto.User, error) {
+// Upsert создает нового или обновляет существующего пользователя по telegramID
+func (rep UserRepository) Upsert(ctx context.Context, user dto.User) error {
 	sql := `insert into "user" (telegram_id, user_name, first_name, last_name, language)
 			values ($1, $2, $3, $4, $5)
 			on conflict (telegram_id) do update set user_name  = excluded.user_name,
 													first_name = excluded.first_name,
 													last_name  = excluded.last_name,
-													language   = excluded.language
-			returning id;`
+													language   = excluded.language;`
 
-	row := rep.QueryRow(
+	_, err := rep.Exec(
 		ctx,
 		sql,
 		user.TelegramID(),
@@ -37,17 +37,19 @@ func (rep UserRepository) UpsertAndGet(ctx context.Context, user dto.User) (dto.
 		user.Language(),
 	)
 
-	var userID int64
-	if err := row.Scan(&userID); err != nil {
-		return user, err
-	}
+	return err
+}
 
-	return dto.NewUser(
-		userID,
+// ApplyAgreementExchangePersonalData сохраняет сиогласие об хранение персональных данных
+func (rep UserRepository) ApplyAgreementExchangePersonalData(ctx context.Context, user dto.User) error {
+	sql := `update "user" set agreement = $2 where telegram_id = $1`
+
+	_, err := rep.Exec(
+		ctx,
+		sql,
 		user.TelegramID(),
-		user.UserName(),
-		user.FirstName(),
-		user.LastName(),
-		user.Language(),
-	), nil
+		user.Agreement(),
+	)
+
+	return err
 }

@@ -1,29 +1,47 @@
 package telegram
 
 import (
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types"
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
+	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-// Client for interaction with telegram API
+// Client клиент для взаимодействия с API телеграмма
 type Client struct {
-	bot types.TelegramBotAPI
+	telegram types.Telegram
 }
 
-// SendMsg sends message to chat or user
-func (client Client) SendMsg(recipient int64, text string) error {
-	msg := tgbotapi.NewMessage(recipient, text)
-	_, err := client.bot.Send(msg)
+// NewClient ctor
+func NewClient(telegram types.Telegram) *Client {
+	return &Client{telegram: telegram}
+}
+
+// Send отправляет сообщение пользователю
+func (client *Client) Send(c tgbotapi.Chattable) {
+	resp, err := client.telegram.Send(c)
 	if err != nil {
-		return err
+		logger.Error("При выполненеи 'Send' произошла ошибка", "err", err, "req", c, "resp", resp)
 	}
-
-	return nil
 }
 
-// NewTelegramClient создает клиент для отправки сообщение
-func NewTelegramClient(api types.TelegramBotAPI) Client {
-	client := Client{bot: api}
+// Request выполняет запрос к АПИ
+func (client *Client) Request(c tgbotapi.Chattable) {
+	resp, err := client.telegram.Request(c)
+	if err != nil {
+		logger.Error("При выполненеи 'Request' произошла ошибка", "err", err, "req", c, "resp", resp)
+	}
+}
 
-	return client
+// SendErr отправляет сообщение с ошибкой пользователю
+func (client *Client) SendErr(receiver int64, err error) {
+	msg := tgbotapi.NewMessage(receiver, err.Error())
+	msg.ParseMode = "MarkdownV2"
+
+	client.Send(msg)
+}
+
+// InitMenu инцилизирует меню в телеграм
+func (client *Client) InitMenu(commands []tgbotapi.BotCommand) {
+	client.Request(tgbotapi.NewDeleteMyCommands())
+	client.Request(tgbotapi.NewSetMyCommands(commands...))
 }

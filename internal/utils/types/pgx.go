@@ -1,4 +1,4 @@
-package database
+package types
 
 import (
 	"context"
@@ -14,10 +14,4 @@ type PgxPool interface {
 	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
 	Begin(ctx context.Context) (pgx.Tx, error)
 	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
-}
-
-// Cryptor ...
-type Cryptor interface {
-	Encrypt(message []byte) ([]byte, error)
-	Decrypt(message []byte) ([]byte, error)
 }

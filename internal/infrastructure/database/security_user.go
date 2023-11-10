@@ -4,8 +4,14 @@ import (
 	"context"
 	"encoding/hex"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/domain/dto"
+	"github.com/IASamoylov/tg_calories_observer/internal/domain/entity/dto"
 )
+
+// Cryptor ...
+type Cryptor interface {
+	Encrypt(message []byte) ([]byte, error)
+	Decrypt(message []byte) ([]byte, error)
+}
 
 // SecurityUserRepository ...
 type SecurityUserRepository struct {
@@ -18,36 +24,31 @@ func NewSecurityUserRepository(userRepository UserRepository, cryptor Cryptor) S
 	return SecurityUserRepository{userRepository: userRepository, cryptor: cryptor}
 }
 
-// UpsertAndGet шифрует персональные данные пользователя перед тем как созданить или обновить
-// и возвращает текущего пользователя
-func (rep SecurityUserRepository) UpsertAndGet(ctx context.Context, user dto.User) (dto.User, error) {
+// Upsert шифрует персональные данные пользователя перед тем как созданить или обновить
+func (rep SecurityUserRepository) Upsert(ctx context.Context, user dto.User) error {
 	userName, err := rep.cryptor.Encrypt([]byte(user.UserName()))
 	if err != nil {
-		return user, err
+		return err
 	}
 	firstName, err := rep.cryptor.Encrypt([]byte(user.FirstName()))
 	if err != nil {
-		return user, err
+		return err
 	}
 	lastName, err := rep.cryptor.Encrypt([]byte(user.LastName()))
 	if err != nil {
-		return user, err
+		return err
 	}
 
-	newUser, err := rep.userRepository.UpsertAndGet(ctx, dto.NewDefaultUser(
+	return rep.userRepository.Upsert(ctx, dto.NewUser(
 		user.TelegramID(),
 		hex.EncodeToString(userName),
 		hex.EncodeToString(firstName),
 		hex.EncodeToString(lastName),
 		user.Language(),
 	))
+}
 
-	return dto.NewUser(
-		newUser.ID(),
-		user.TelegramID(),
-		user.UserName(),
-		user.FirstName(),
-		user.LastName(),
-		user.Language(),
-	), err
+// ApplyAgreementExchangePersonalData сохраняет сиогласие об хранение персональных данных
+func (rep SecurityUserRepository) ApplyAgreementExchangePersonalData(ctx context.Context, user dto.User) error {
+	return rep.userRepository.ApplyAgreementExchangePersonalData(ctx, user)
 }

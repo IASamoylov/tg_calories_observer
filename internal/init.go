@@ -4,6 +4,20 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/IASamoylov/tg_calories_observer/internal/clients/telegram"
+
+	commandrouter "github.com/IASamoylov/tg_calories_observer/internal/app/services/command_router"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/comands/help"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/comands/start"
+
+	productkeyboard "github.com/IASamoylov/tg_calories_observer/internal/app/keybords/product"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/inline_keyboards/product"
+
 	telegramlogger "github.com/IASamoylov/tg_calories_observer/internal/pkg/logger/cores/telegram"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
@@ -16,13 +30,10 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	debugv1 "github.com/IASamoylov/tg_calories_observer/internal/api/debug/v1"
 	telegramv1 "github.com/IASamoylov/tg_calories_observer/internal/api/telegram/v1"
-	"github.com/IASamoylov/tg_calories_observer/internal/clients/telegram"
 	config "github.com/IASamoylov/tg_calories_observer/internal/config/debug"
 	simpleserver "github.com/IASamoylov/tg_calories_observer/internal/pkg/simple_server"
 )
@@ -41,7 +52,11 @@ func (app *App) InitCryptor() *App {
 // InitControllers инцилизирует ручки сервиса.
 func (app *App) InitControllers() *App {
 	app.controllers.debug = debugv1.NewController()
-	app.controllers.telegram = telegramv1.NewController(app.externalClients.telegramBotAPI)
+	app.controllers.telegram = telegramv1.NewController(
+		app.externalClients.telegramBotAPI,
+		app.services.commandRouter,
+		//app.services.keyboardRouter,
+	)
 
 	return app
 }
@@ -103,18 +118,18 @@ func (app *App) InitExternalClientsConnIfNotSet() *App {
 	if app.externalClients.telegramBotAPI == nil {
 		// https://core.telegram.org/bots/webhooks#testing-your-bot-with-updates
 		api, err := tgbotapi.NewBotAPI(app.Cfg.Telegram.Token)
-
 		if err != nil {
 			logger.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
 		}
 
+		api.Debug = true
 		app.externalClients.telegramBotAPI = api
-
-		// только для полноценной интеграции с телеграммом будет подключен дополнительный логгер
-		logger.SetLogger(logger.New(telegramlogger.NewChannelErrorLoggerCore(
-			app.Cfg.Telegram.Support,
-			app.externalClients.telegramBotAPI)))
 	}
+
+	// только для полноценной интеграции с телеграммом будет подключен дополнительный логгер
+	logger.SetLogger(logger.New(telegramlogger.NewChannelErrorLoggerCore(
+		app.Cfg.Telegram.Support,
+		app.externalClients.telegramBotAPI)))
 
 	return app
 }
@@ -122,13 +137,58 @@ func (app *App) InitExternalClientsConnIfNotSet() *App {
 // InitClients инцлизиирует клиенты для взаимодействия с внешними API. Клиенты предоставляют удобный
 // функционал для взаимодействия с API. Зависит от вызова метода InitExternalClientsConnIfNotSet.
 func (app *App) InitClients() *App {
-	app.clients.telegramClient = telegram.NewTelegramClient(app.externalClients.telegramBotAPI)
+	app.clients.telegram = telegram.NewClient(app.externalClients.telegramBotAPI)
+
+	return app
+}
+
+// InitCommands инлизирует команды доступные боту
+func (app *App) InitCommands() *App {
+	app.commands.help = help.NewHandler()
+	app.commands.start = start.NewHandler(app.commands.help, app.externalClients.telegramBotAPI)
+
+	return app
+}
+
+// InitInlineKeyboardButtons инлизирует inline кнопки для упрощения ввода пользователя
+func (app *App) InitInlineKeyboardButtons() *App {
+	app.inlineKeyboardButtons.addProduct = product.NewAddProductInlineButton(nil)
+	app.inlineKeyboardButtons.editProduct = product.NewEditProductInlineButton(nil)
+	app.inlineKeyboardButtons.removeProduct = product.NewRemoveProductInlineButton(nil)
+	app.inlineKeyboardButtons.getProduct = product.NewGetProductInlineButton(nil)
+
+	return app
+}
+
+// InitKeyboards инлизирует кастомную клавиатуру для упрощения ввода пользователя
+func (app *App) InitKeyboards() *App {
+	app.keyboard.product = productkeyboard.NewButton(
+		app.inlineKeyboardButtons.addProduct,
+		app.inlineKeyboardButtons.editProduct,
+		app.inlineKeyboardButtons.removeProduct,
+		app.inlineKeyboardButtons.getProduct,
+	)
+
+	app.commands.start.WithKeyboardButton(app.keyboard.product)
 
 	return app
 }
 
 // InitServices инцилизирует сервисы, адаптеры.
 func (app *App) InitServices() *App {
+	app.services.commandRouter = commandrouter.NewCommandRouter(
+		app.clients.telegram,
+		app.repositories.user,
+		app.commands.help,
+		app.commands.start,
+		app.commands.help,
+	)
+	//app.services.keyboardRouter = routers.NewKeyboardRouter(
+	//	app.externalClients.telegramBotAPI,
+	//	app.repositories.user,
+	//	app.keyboard.product,
+	//)
+
 	return app
 }
 
@@ -143,7 +203,7 @@ func (app *App) ApplyOverridesExternalClientConn(overrides ...OverrideExternalCl
 
 // WithTelegramAPI переопределяет клиент для взаимодействия с telegram API. Для локально разработки используется
 // преобразование long pooling в web hook
-func WithTelegramAPI(ctor func(token string) types.TelegramBotAPI) OverrideExternalClient {
+func WithTelegramAPI(ctor func(token string) types.Telegram) OverrideExternalClient {
 	return func(app *App) *App {
 		app.externalClients.telegramBotAPI = ctor(app.Cfg.Telegram.Token)
 

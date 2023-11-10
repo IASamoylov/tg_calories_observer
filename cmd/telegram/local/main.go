@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
+
 	app "github.com/IASamoylov/tg_calories_observer/internal"
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
 	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 		port = "9093"
 	}
 
-	app.NewApp(context.Background(), app.WithTelegramAPI(func(token string) types.TelegramBotAPI {
+	app.NewApp(context.Background(), app.WithTelegramAPI(func(token string) types.Telegram {
 		api, err := tgbotapi.NewBotAPI(token)
 
 		if err != nil {

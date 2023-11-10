@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/domain/dto"
+	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
 
 	_ "github.com/lib/pq"
 
@@ -21,8 +21,6 @@ import (
 
 	"github.com/IASamoylov/tg_calories_observer/internal"
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types"
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types/mocks"
 	"github.com/golang/mock/gomock"
 )
 
@@ -35,19 +33,20 @@ type Context struct {
 	app            *internal.App
 	telegramUserID int64
 	// mocks
-	TelegramAPIMock *mocks.MockTelegramBotAPI
+	TelegramAPIMock *types.MockTelegram
 }
 
 // NewGlobalContext ctor
 func NewGlobalContext() *Context {
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-	telegramAPIMock := mocks.NewMockTelegramBotAPI(gomock.NewController(&testing.T{}))
+
+	telegramAPIMock := types.NewMockTelegram(gomock.NewController(&testing.T{}))
 	global := &Context{
 		Context:         ctx,
 		Host:            fmt.Sprintf("http://localhost:%s/api", PORT),
 		TelegramAPIMock: telegramAPIMock,
 		telegramUserID:  1_000_000,
-		app: internal.NewApp(ctx, internal.WithTelegramAPI(func(_ string) types.TelegramBotAPI {
+		app: internal.NewApp(ctx, internal.WithTelegramAPI(func(_ string) types.Telegram {
 			return telegramAPIMock
 		})),
 	}
@@ -102,6 +101,6 @@ func (c *Context) WaitForRun() {
 	wg.Wait()
 }
 
-func (c *Context) NextTelegramUserID() dto.TelegramID {
-	return dto.TelegramID(atomic.AddInt64(&c.telegramUserID, 10))
+func (c *Context) NextTelegramUserID() int64 {
+	return atomic.AddInt64(&c.telegramUserID, 1)
 }

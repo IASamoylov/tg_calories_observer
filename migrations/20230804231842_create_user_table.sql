@@ -2,15 +2,13 @@
 -- +goose StatementBegin
 create table "user"
 (
-    id          bigserial  not null primary key,
-    telegram_id bigint     not null,
+    telegram_id bigint     not null primary key,
     user_name   text       not null,
     first_name  text       not null,
     last_name   text       not null,
-    language    varchar(2) not null
+    language    varchar(2) not null,
+    agreement   boolean default false
 );
-
-comment on table "user" is 'the table stored information about telegram users the application will work with PK so as not to be tied to telegram ID';
 
 -- +goose StatementEnd
 

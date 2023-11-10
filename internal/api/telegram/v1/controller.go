@@ -1,17 +1,26 @@
 package telegram
 
 import (
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types"
+	commandrouter "github.com/IASamoylov/tg_calories_observer/internal/app/services/command_router"
+	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
 )
 
 // Controller a set of handles for receiving messages from telegram view webhook
 type Controller struct {
-	bot types.TelegramBotAPI
+	bot           types.Telegram
+	commandRouter *commandrouter.CommandRouter
+	//keyboardRouter *routers.KeyboardRouter
 }
 
 // NewController ctor
-func NewController(bot types.TelegramBotAPI) Controller {
+func NewController(
+	bot types.Telegram,
+	commandRouter *commandrouter.CommandRouter,
+	// keyboardRouter *routers.KeyboardRouter,
+) Controller {
 	return Controller{
-		bot: bot,
+		bot:           bot,
+		commandRouter: commandRouter,
+		//keyboardRouter: keyboardRouter,
 	}
 }

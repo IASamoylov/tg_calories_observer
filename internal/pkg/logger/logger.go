@@ -16,6 +16,7 @@ func init() {
 	SetLogger(New())
 }
 
+// Sync ...
 func Sync() error {
 	return log.Sync()
 }
@@ -26,9 +27,9 @@ func SetLogger(logger *zap.SugaredLogger) {
 }
 
 // SetLogLvl переопределяет минимальный уровень логирования
-func SetLogLvl(lvl string) error {
-	return defaultLvl.UnmarshalText([]byte(lvl))
-}
+//func SetLogLvl(lvl string) error {
+//	return defaultLvl.UnmarshalText([]byte(lvl))
+//}
 
 // New создает новый экземпляр zap.SugaredLogger
 func New(additionalCores ...zapcore.Core) *zap.SugaredLogger {
@@ -53,42 +54,37 @@ func New(additionalCores ...zapcore.Core) *zap.SugaredLogger {
 	return logger.Sugar()
 }
 
+// Info ...
 func Info(msg string, args ...interface{}) {
 	log.Infow(msg, args...)
 }
 
+// Infof ...
 func Infof(msg string, args ...interface{}) {
 	log.Infof(msg, args...)
 }
 
-func Debug(msg string, args ...interface{}) {
-	log.Debugw(msg, args...)
-}
-
+// Warn ...
 func Warn(msg string, args ...interface{}) {
 	log.Warnw(msg, args...)
 }
 
+// Error ...
 func Error(msg string, args ...interface{}) {
 	log.Errorw(msg, args...)
 }
 
+// Errorf ...
 func Errorf(msg string, args ...interface{}) {
 	log.Errorf(msg, args...)
 }
 
-func Panic(msg string, args ...interface{}) {
-	log.Panicw(msg, args...)
-}
-
+// Panicf ...
 func Panicf(msg string, args ...interface{}) {
 	log.Panicf(msg, args...)
 }
 
-func Fatal(msg string, args ...interface{}) {
-	log.Fatalw(msg, args...)
-}
-
+// Fatalf ...
 func Fatalf(msg string, args ...interface{}) {
 	log.Fatalf(msg, args...)
 }

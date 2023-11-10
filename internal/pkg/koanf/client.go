@@ -37,7 +37,7 @@ func WithEnvProvider(prefix string, parsers map[string]func(string) any) func(*k
 		})
 
 		if err := client.Load(provider, nil); err != nil {
-			logger.Fatalf("an error occurred when loading the application configuration from the provider %T: %s", provider, err)
+			logger.Fatalf("не удалось сформировать конфиг из провайдера %T: %s", provider, err)
 		}
 	}
 }
@@ -48,7 +48,7 @@ func WithFileProvider(path string) func(*koanf.Koanf) {
 		provider := fileprovider.Provider(path)
 
 		if err := client.Load(provider, json.Parser()); err != nil {
-			logger.Fatalf("an error occurred when loading the application configuration from the provider %T: %s", provider, err)
+			logger.Fatalf("не удалось сформировать конфиг из провайдера %T: %s", provider, err)
 		}
 	}
 }

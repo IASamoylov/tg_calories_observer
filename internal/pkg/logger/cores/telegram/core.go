@@ -3,6 +3,7 @@ package telegram
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/gookit/slog"
@@ -27,7 +28,9 @@ func (ws writeSyncer) Write(p []byte) (n int, err error) {
 	if err = json.Indent(&prettyJSON, p, "", "    "); err != nil {
 		return 0, err
 	}
-	msg := tgbotapi.NewMessage(ws.channelID, prettyJSON.String())
+
+	msg := tgbotapi.NewMessage(ws.channelID, fmt.Sprintf("```json\n%s\n```", prettyJSON.String()))
+	msg.ParseMode = "MarkdownV2"
 	_, err = ws.client.Send(msg)
 
 	return len(p), err
@@ -45,6 +48,7 @@ func newWriteSyncer(channelID int64, client BotTelegramClient) zapcore.WriteSync
 	}
 }
 
+// NewChannelErrorLoggerCore создает новый zapcore.Core, который позволит отправлять сообщения в телеграм канал
 func NewChannelErrorLoggerCore(channelID int64, client BotTelegramClient) zapcore.Core {
 	conf := zap.NewProductionEncoderConfig()
 	conf.TimeKey = "time"

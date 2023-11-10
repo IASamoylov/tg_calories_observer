@@ -5,6 +5,19 @@ import (
 	"os"
 	"syscall"
 
+	commandrouter "github.com/IASamoylov/tg_calories_observer/internal/app/services/command_router"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/clients/telegram"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/comands/help"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/comands/start"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/inline_keyboards/product"
+	productkeyboard "github.com/IASamoylov/tg_calories_observer/internal/app/keybords/product"
+
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/graceful"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
@@ -19,18 +32,16 @@ import (
 
 	debugv1 "github.com/IASamoylov/tg_calories_observer/internal/api/debug/v1"
 	telegramv1 "github.com/IASamoylov/tg_calories_observer/internal/api/telegram/v1"
-	"github.com/IASamoylov/tg_calories_observer/internal/clients/telegram"
 	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
 	simpleserver "github.com/IASamoylov/tg_calories_observer/internal/pkg/simple_server"
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types"
 )
 
 type externalClients struct {
-	telegramBotAPI types.TelegramBotAPI
+	telegramBotAPI types.Telegram
 }
 
 type clients struct {
-	telegramClient telegram.Client
+	telegram *telegram.Client
 }
 
 type controllers struct {
@@ -43,22 +54,45 @@ type repositories struct {
 }
 
 type services struct {
+	commandRouter *commandrouter.CommandRouter
+	//keyboardRouter *routers.KeyboardRouter
+}
+
+type inlineKeyboardButtons struct {
+	// product
+	addProduct    *product.AddProductInlineButton
+	editProduct   *product.EditProductInlineButton
+	removeProduct *product.RemoveProductInlineButton
+	getProduct    *product.GetProductInlineButton
+}
+
+type command struct {
+	start *start.Handler
+	help  *help.Handler
+}
+
+type keyboard struct {
+	// product
+	product *productkeyboard.Handler
 }
 
 // App ...
 type App struct {
 	context.Context
-	Cfg             config.App
-	cryptor         crypto.Cryptor
-	externalClients externalClients
-	clients         clients
-	repositories    repositories
-	services        services
-	controllers     controllers
-	pool            *pgxpool.Pool
-	httpServer      *simpleserver.SimpleHTTPServer
-	closer          *multicloser.MultiCloser
-	ctx             context.Context
+	Cfg                   config.App
+	cryptor               crypto.Cryptor
+	externalClients       externalClients
+	clients               clients
+	repositories          repositories
+	inlineKeyboardButtons inlineKeyboardButtons
+	keyboard              keyboard
+	commands              command
+	services              services
+	controllers           controllers
+	pool                  *pgxpool.Pool
+	httpServer            *simpleserver.SimpleHTTPServer
+	closer                *multicloser.MultiCloser
+	ctx                   context.Context
 }
 
 // OverrideExternalClient функциония позволяющая переопределить компонент системы,
@@ -84,6 +118,9 @@ func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
 		InitClients().
 		InitPgxConnection().
 		InitRepositories().
+		InitCommands().
+		InitInlineKeyboardButtons().
+		InitKeyboards().
 		InitServices().
 		InitControllers().
 		InitServer()
@@ -96,6 +133,7 @@ func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
 
 // Run запускает сервер
 func (app *App) Run() {
+	app.services.commandRouter.InitMenu()
 	app.httpServer.Run()
 	app.closer.Wait()
 

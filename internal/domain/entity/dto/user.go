@@ -1,25 +1,17 @@
 package dto
 
-// TelegramID ...
-type TelegramID int64
-
-// User describes users in the service
+// User пользователь сервиса
 type User struct {
-	id         int64
-	telegramID TelegramID
+	telegramID int64
 	userName   string
 	firstName  string
 	lastName   string
 	language   string
-}
-
-// ID returns user internal id
-func (u User) ID() int64 {
-	return u.id
+	agreement  bool
 }
 
 // TelegramID returns user telegram id
-func (u User) TelegramID() TelegramID {
+func (u User) TelegramID() int64 {
 	return u.telegramID
 }
 
@@ -43,9 +35,14 @@ func (u User) Language() string {
 	return u.language
 }
 
-// NewDefaultUser creates a new user without internal id
-func NewDefaultUser(
-	telegramID TelegramID,
+// Agreement agreement exchange personal data
+func (u User) Agreement() bool {
+	return u.agreement
+}
+
+// NewUser создает пользователя
+func NewUser(
+	telegramID int64,
 	userName string,
 	firstName string,
 	lastName string,
@@ -60,21 +57,9 @@ func NewDefaultUser(
 	}
 }
 
-// NewUser creates a new user with internal id
-func NewUser(
-	ID int64,
-	telegramID TelegramID,
-	userName string,
-	firstName string,
-	lastName string,
-	language string,
-) User {
-	return User{
-		id:         ID,
-		telegramID: telegramID,
-		userName:   userName,
-		firstName:  firstName,
-		lastName:   lastName,
-		language:   language,
-	}
+// ApplyAgreementExchangePersonalData пользователь согласился с хранением персональных данных
+func (u User) ApplyAgreementExchangePersonalData() User {
+	u.agreement = true
+
+	return u
 }
