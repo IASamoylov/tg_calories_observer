@@ -136,7 +136,7 @@ func TestExecute(t *testing.T) {
 func TestWithKeyboardButton(t *testing.T) {
 	t.Parallel()
 
-	expectedText := expectedText + "\n\nДля твоего удобства я подготовил меню быстрого доступа 👇"
+	expectedText := expectedText + help
 	expectedProductBtn := tgbotapi.KeyboardButton{Text: "Продукты"}
 	expectedReportBrn := tgbotapi.KeyboardButton{Text: "Отчеты"}
 	expectedSettingBtn := tgbotapi.KeyboardButton{Text: "Настройки"}

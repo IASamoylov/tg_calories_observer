@@ -23,6 +23,7 @@ const (
 		"Я ищу 'злодеев' вроде неполезных продуктов 🍟🍫, но без твоей помощи я не справлюсь. " +
 		"Давай вместе вести дневник раследований, чтобы выявить все 'пострадавшие' продукты 🍎. \n\n" +
 		"Чтобы узнать подробнее что я умею, необходимо ввести команду %s."
+	help = "\n\nДля твоего удобства я подготовил меню быстрого доступа 👇"
 
 	description = "Показать привестивие"
 )
@@ -44,7 +45,7 @@ func (handler *Handler) Execute(_ context.Context, user dto.User, _ ...string) (
 		msg.Caption = fmt.Sprintf(text, user.UserName(), handler.helpCmd.Alias())
 		if len(handler.keyboard) > 0 {
 			msg.ReplyMarkup = keyboard
-			msg.Caption += "\n\nДля твоего удобства я подготовил меню быстрого доступа 👇"
+			msg.Caption += help
 		}
 
 		return msg, nil
@@ -53,7 +54,7 @@ func (handler *Handler) Execute(_ context.Context, user dto.User, _ ...string) (
 	msg := tgbotapi.NewMessage(user.TelegramID(), fmt.Sprintf(text, user.UserName(), handler.helpCmd.Alias()))
 	if len(handler.keyboard) > 0 {
 		msg.ReplyMarkup = keyboard
-		msg.Text += "\n\nДля твоего удобства я подготовил меню быстрого доступа 👇"
+		msg.Text += help
 	}
 
 	return msg, nil

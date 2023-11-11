@@ -133,7 +133,7 @@ func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
 
 // Run запускает сервер
 func (app *App) Run() {
-	app.services.commandRouter.InitMenu()
+	//app.services.commandRouter.InitMenu()
 	app.httpServer.Run()
 	app.closer.Wait()
 

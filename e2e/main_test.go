@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
+	scenariosdebug "github.com/IASamoylov/tg_calories_observer/e2e/scenarios/debug"
 
-	"github.com/IASamoylov/tg_calories_observer/e2e/debug_handler"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/IASamoylov/tg_calories_observer/e2e/global"
 
@@ -39,6 +39,6 @@ func TestIntegration(t *testing.T) {
 	t.Run("DebugHandlerSuite", func(t *testing.T) {
 		t.Parallel()
 
-		suite.Run(t, &debug_handler.DebugHandlerSuite{GlobalContext: globalContext})
+		suite.Run(t, &scenariosdebug.Suite{GlobalContext: globalContext})
 	})
 }
