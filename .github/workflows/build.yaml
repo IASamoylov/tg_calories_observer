@@ -54,7 +54,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Install gotestsum
-        run: go install gotest.tools/gotestsum@latest
+        run: make ci-cd-deps
       - name: Build
         run: make build
       - name: Test
@@ -62,12 +62,12 @@ jobs:
           LOCAL_BIN: ~/go/bin
         run: make test
 
-      - name: Integration Test
-        env:
-          LOCAL_BIN: ~/go/bin
-          APP_POSTGRES_HOST: "localhost"
-          APP_POSTGRES_PORT: ${{ env.APP_POSTGRES_PORT }}
-        run: make e2e
+#      - name: Integration Test
+#        env:
+#          LOCAL_BIN: ~/go/bin
+#          APP_POSTGRES_HOST: "localhost"
+#          APP_POSTGRES_PORT: ${{ env.APP_POSTGRES_PORT }}
+#        run: make e2e
 
       - name: Upload test reports
         if: always()

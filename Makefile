@@ -60,12 +60,16 @@ ifeq ($(wildcard $(LOCAL_BIN)/golangci-lint),)
 	GOPATH=LOCAL_BIN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
 endif
 
+
+.PHONY: ci-cd-deps
+ci-cd-deps:
+	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.10.0
+	GOBIN=$(LOCAL_BIN) go install gotest.tools/gotestsum@latest
+
 ## bin-deps: installs the dependencies for the correct operation of the application
 .PHONY: bin-deps
-bin-deps: .install-lint
-	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.10.0
+bin-deps: .install-lint ci-cd-deps
 	GOBIN=$(LOCAL_BIN) go install go.uber.org/mock/mockgen@latest
-	GOBIN=$(LOCAL_BIN) go install gotest.tools/gotestsum@latest
 	GOBIN=$(LOCAL_BIN) go install github.com/wadey/gocovmerge@latest
 	GOBIN=$(LOCAL_BIN) go install github.com/onsi/ginkgo/v2/ginkgo
 	go get github.com/golang/mock/mockgen
