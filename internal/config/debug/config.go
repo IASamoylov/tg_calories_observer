@@ -17,7 +17,4 @@ var (
 
 	// GithubSHAShort describes the commit on which the build was built
 	GithubSHAShort string
-
-	// BuildTime describes date of build
-	BuildTime string
 )

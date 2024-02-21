@@ -1,16 +1,11 @@
 package main
 
 import (
-	"os"
+	"context"
 
 	app "github.com/IASamoylov/tg_calories_observer/internal"
 )
 
 func main() {
-	port, ok := os.LookupEnv("PORT")
-	if !ok {
-		port = "9090"
-	}
-
-	app.NewApp(port).Run()
+	app.NewApp(context.Background()).Run()
 }

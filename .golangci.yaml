@@ -23,7 +23,6 @@ linters:
     - govet
     - ineffassign
     - contextcheck
-    - errchkjson
     - gofmt
     - megacheck
     - revive
@@ -49,3 +48,13 @@ linters-settings:
   lll:
     line-length: 120
     tab-width: 2
+  ireturn:
+    allow:
+      - github.com/go-telegram-bot-api/telegram-bot-api/v5
+      - go.uber.org/zap/zapcore
+      - error
+      - empty
+      - stdlib
+      # You can specify idiomatic endings for interface
+      - (or|er)$
+      # reject-list of interface

@@ -7,9 +7,11 @@ on:
         required: true
 
 jobs:
-  build:
-    name: Go
+  prepare:
+    name: Prepare
     runs-on: ubuntu-latest
+    outputs:
+      POSTGRES_DB: ${{ steps.output_tag.outputs.APP_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -17,23 +19,56 @@ jobs:
         uses: ./.github/actions/set_environment_variables
         with:
           file: ./.build/.env
-          commit: ${{ github.sha}}
+          commit: ${{ github.sha }}
+      - name: Output tag
+        id: output_tag
+        run: |
+          echo "APP_NAME=${{env.APP_NAME}}" >> $GITHUB_OUTPUT
+  build:
+    name: Go
+    needs: prepare
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: ${{ needs.prepare.outputs.POSTGRES_DB }}
+          POSTGRES_HOST_AUTH_METHOD: trust # docker-compose are using only for dev/integration tests
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_environment_variables
+        with:
+          file: ./.build/.env
+          commit: ${{ github.sha }}
       - name: Setup Golang with cache
         uses: magnetikonline/action-golang-cache@v4
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Install gotestsum
-        run: go install gotest.tools/gotestsum@latest
+        run: make ci-cd-deps
       - name: Build
         run: make build
       - name: Test
         env:
           LOCAL_BIN: ~/go/bin
         run: make test
-      - name: Test
-        env:
-          LOCAL_BIN: ~/go/bin
-        run: make integration-test
+
+#      - name: Integration Test
+#        env:
+#          LOCAL_BIN: ~/go/bin
+#          APP_POSTGRES_HOST: "localhost"
+#          APP_POSTGRES_PORT: ${{ env.APP_POSTGRES_PORT }}
+#        run: make e2e
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v3

@@ -1,81 +1,135 @@
 package internal
 
 import (
-	"log"
+	"context"
 	"os"
 	"syscall"
+
+	commandrouter "github.com/IASamoylov/tg_calories_observer/internal/app/services/command_router"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/clients/telegram"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/comands/help"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/comands/start"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/app/inline_keyboards/product"
+	productkeyboard "github.com/IASamoylov/tg_calories_observer/internal/app/keybords/product"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/graceful"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/crypto"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/infrastructure/database"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/config"
 
 	debugv1 "github.com/IASamoylov/tg_calories_observer/internal/api/debug/v1"
 	telegramv1 "github.com/IASamoylov/tg_calories_observer/internal/api/telegram/v1"
-	"github.com/IASamoylov/tg_calories_observer/internal/clients/telegram"
 	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
 	simpleserver "github.com/IASamoylov/tg_calories_observer/internal/pkg/simple_server"
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types"
 )
 
 type externalClients struct {
-	telegramBotAPI types.TelegramBotAPI
+	telegramBotAPI types.Telegram
 }
 
 type clients struct {
-	telegramClient *telegram.Client
+	telegram *telegram.Client
 }
 
 type controllers struct {
-	debug    *debugv1.Controller
-	telegram *telegramv1.Controller
+	debug    debugv1.Controller
+	telegram telegramv1.Controller
 }
 
-// App service
+type repositories struct {
+	user database.SecurityUserRepository
+}
+
+type services struct {
+	commandRouter *commandrouter.CommandRouter
+	//keyboardRouter *routers.KeyboardRouter
+}
+
+type inlineKeyboardButtons struct {
+	// product
+	addProduct    *product.AddProductInlineButton
+	editProduct   *product.EditProductInlineButton
+	removeProduct *product.RemoveProductInlineButton
+	getProduct    *product.GetProductInlineButton
+}
+
+type command struct {
+	start *start.Handler
+	help  *help.Handler
+}
+
+type keyboard struct {
+	// product
+	product *productkeyboard.Handler
+}
+
+// App ...
 type App struct {
-	Cfg             *config.App
-	ExternalClients *externalClients
-	// db poll
-	clients clients
-	// repositories
-	// clients
-	// services
-	// CQRS
-
-	controllers *controllers
-	httpServer  *simpleserver.SimpleHTTPServer
-	closer      *multicloser.MultiCloser
+	context.Context
+	Cfg                   config.App
+	cryptor               crypto.Cryptor
+	externalClients       externalClients
+	clients               clients
+	repositories          repositories
+	inlineKeyboardButtons inlineKeyboardButtons
+	keyboard              keyboard
+	commands              command
+	services              services
+	controllers           controllers
+	pool                  *pgxpool.Pool
+	httpServer            *simpleserver.SimpleHTTPServer
+	closer                *multicloser.MultiCloser
+	ctx                   context.Context
 }
 
-// OverrideExternalClient functions to replace an external clients with mocks for integration tests
-type OverrideExternalClient func(app *App) *App
+// AppOverrides функциония позволяющая переопределить компонент системы,
+// переопределяет только внешние клиенты. Удобно при использование е2е тестов чтобы
+// не использовать реальные внешние сервисы, а моки.
+type AppOverrides func(app *App) *App
 
-// NewApp creates a new App with all dependencies
-func NewApp(port string, overrides ...OverrideExternalClient) *App {
+// NewApp создает новое приеложение инцилизирая все зависимости последовательно
+func NewApp(ctx context.Context, overrides ...AppOverrides) *App {
 	app := &App{
-		Cfg:             config.NewConfig(),
-		closer:          multicloser.New(),
-		ExternalClients: &externalClients{},
-		controllers:     &controllers{},
+		Cfg:    config.NewConfig(),
+		closer: multicloser.New(),
+		ctx:    ctx,
 	}
 
-	// release resources that have been added globally
-	app.closer.Add(multicloser.NewIOCloserWrap(func() error {
-		return multicloser.CloseGlobal()
-	}))
+	// регистриуем освобождение глобальные ресурсов
+	app.closer.Add(multicloser.GetGlobalCloser())
 
-	app.ApplyOverridesExternalClientConn(overrides...).
+	app.InitCryptor().
+		ApplyOverrides(overrides...).
 		InitExternalClientsConnIfNotSet().
 		InitClients().
 		InitPgxConnection().
+		InitRepositories().
+		InitCommands().
+		InitInlineKeyboardButtons().
+		InitKeyboards().
+		InitServices().
 		InitControllers().
-		InitServer(port).
-		InitGracefulShutdown(os.Interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+		InitServer()
+
+	// регистрируем
+	graceful.Shutdown(ctx, app.closer, os.Interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 
 	return app
 }
 
-// Run starts server
+// Run запускает сервер
 func (app *App) Run() {
 	app.httpServer.Run()
 	app.closer.Wait()
-
-	log.Print("Server Stopped")
 }

@@ -15,6 +15,5 @@ func (ctr Controller) V1GetServiceInfo(writer http.ResponseWriter, _ *http.Reque
 		"version":          config.Version,
 		"github_sha":       config.GithubSHA,
 		"github_sha_short": config.GithubSHAShort,
-		"build_time":       config.BuildTime,
 	})
 }

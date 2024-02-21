@@ -27,3 +27,5 @@ unit.coverage.out
 /.idea/tg_calories_observer.iml
 /.idea/vcs.xml
 /integration.report.xml
+/e2e.coverage.out.tmp
+/e2e.report.xml

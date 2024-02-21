@@ -1,14 +1,11 @@
 package telegram
 
 import (
-	"fmt"
-	"io"
-	"log"
 	"net/http"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/config/debug"
+	"github.com/IASamoylov/tg_calories_observer/internal/domain/entity/dto"
 )
 
 // V1WebhookUpdates receiving a message from telegram using a web hook
@@ -17,41 +14,36 @@ func (ctr Controller) V1WebhookUpdates(writer http.ResponseWriter, req *http.Req
 		return
 	}
 
-	update := <-ctr.bot.ListenForWebhookRespReqFormat(writer, req)
-	log.Println(update)
-	go func(update tgbotapi.Update) {
-		if update.Message != nil { // If we got a message
-			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-			msgText := fmt.Sprintf(`[%s] Привет %s (@%s), ты прислал мне сообщение "%s", но сделал это без уважения`,
-				debug.Version, update.Message.From.FirstName, update.Message.From.UserName, update.Message.Text)
-
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, msgText)
-			_, _ = ctr.bot.Send(msg)
-			photo := requestPhoto()
-			if len(photo) != 0 {
-				msg := tgbotapi.NewPhoto(update.Message.Chat.ID, tgbotapi.FileBytes{
-					Name:  "The Godfather",
-					Bytes: photo,
-				})
-				_, _ = ctr.bot.Send(msg)
-
-			}
-		}
-	}(update)
-}
-
-func requestPhoto() []byte {
-	resp, err := http.Get("https://static1.colliderimages.com/wordpress/wp-content/" +
-		"uploads/2022/11/The-Godfather.jpg?q=50&fit=contain&w=1140&h=&dpr=1.5")
-	if err == nil && resp.StatusCode == http.StatusOK {
-		// nolint
-		defer resp.Body.Close()
-
-		photo, _ := io.ReadAll(resp.Body)
-
-		return photo
+	update := <-ctr.decoder.ListenForWebhookRespReqFormat(writer, req)
+	if update.Message == nil && update.CallbackQuery == nil { // If we got a message
+		return
 	}
 
-	return []byte{}
+	if update.CallbackQuery != nil {
+		//ctr.commandRouter.Execute(req.Context(), getUser(update.CallbackQuery.From), update.CallbackQuery.Data)
+
+		update.Message = &tgbotapi.Message{
+			From: update.CallbackQuery.From,
+			Text: update.CallbackQuery.Data,
+		}
+	}
+
+	if update.Message.IsCommand() {
+		ctr.commandRouter.Execute(
+			req.Context(),
+			dto.NewUser(
+				update.Message.From.ID,
+				update.Message.From.UserName,
+				update.Message.From.FirstName,
+				update.Message.From.LastName,
+				update.Message.From.LanguageCode,
+			),
+			update.Message.Command(),
+			update.Message.CommandArguments(),
+		)
+
+		return
+	}
+
+	//ctr.keyboardRouter.Execute(req.Context(), getUser(update.Message.From), update.Message.Text)
 }

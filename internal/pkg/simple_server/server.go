@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
 )
 
 // SimpleHTTPServer HTTP server
@@ -15,7 +16,10 @@ type SimpleHTTPServer struct {
 	base      http.Server
 }
 
-// NewHTTPServer creates simple server
+// Handler server handler
+type Handler func(writer http.ResponseWriter, req *http.Request)
+
+// NewHTTPServer создает простой сервер
 func NewHTTPServer(host, apiPrefix string) *SimpleHTTPServer {
 	return &SimpleHTTPServer{
 		apiPrefix: apiPrefix,
@@ -28,15 +32,23 @@ func NewHTTPServer(host, apiPrefix string) *SimpleHTTPServer {
 	}
 }
 
-// Register registers a handler for the path
+// Register добавляет HTTP обработчик по заявленому пути
 func (server *SimpleHTTPServer) Register(
 	method string,
 	path string,
-	handler func(writer http.ResponseWriter, req *http.Request)) *SimpleHTTPServer {
+	handler Handler) *SimpleHTTPServer {
 	if mux, ok := server.base.Handler.(*http.ServeMux); ok {
 		path = fmt.Sprintf("/%s%s", server.apiPrefix, path)
 
 		mux.HandleFunc(path, func(writer http.ResponseWriter, req *http.Request) {
+			defer func() {
+				if detail := recover(); detail != nil {
+					logger.Errorf("Произошла непридведенная ошибка: %s", detail)
+
+					writer.WriteHeader(http.StatusInternalServerError)
+				}
+			}()
+
 			if req.Method != method {
 				writer.WriteHeader(http.StatusNotFound)
 
@@ -50,23 +62,19 @@ func (server *SimpleHTTPServer) Register(
 	return server
 }
 
-// Run starts a new server in goroutine
+// Run запускает сервер
 func (server *SimpleHTTPServer) Run() {
 	go func() {
 		err := server.base.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Println(fmt.Sprintf("an error occurred while executing http.Server.ListenAndServe: %s ", err))
+			logger.Infof("произошла ошибка при ралоте сервера: %s", err)
 		}
 	}()
 
-	log.Println(fmt.Sprintf("HTTP server stated on host %s", server.base.Addr))
+	logger.Infof("HTTP сервер запущен на хосте %s", server.base.Addr)
 }
 
-// Close stops server
+// Close останавливат сервер
 func (server *SimpleHTTPServer) Close() error {
-	if err := server.base.Shutdown(context.Background()); err != nil {
-		return fmt.Errorf("an error occurred while executing http.Server.Shutdown: %s ", err)
-	}
-
-	return nil
+	return server.base.Shutdown(context.Background())
 }

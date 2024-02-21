@@ -5,29 +5,24 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/types"
+	"github.com/IASamoylov/tg_calories_observer/internal/config"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
 
 	app "github.com/IASamoylov/tg_calories_observer/internal"
+	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
 	multicloser "github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func main() {
-	port, ok := os.LookupEnv("PORT")
-	if !ok {
-		port = "9090"
-	}
-
-	app.NewApp(port, app.WithTelegramAPI(func(token string) types.TelegramBotAPI {
-		api, err := tgbotapi.NewBotAPI(token)
+	app.NewApp(context.Background(), app.WithTelegramAPI(func(cfg config.App) types.Telegram {
+		api, err := tgbotapi.NewBotAPI(cfg.Telegram.Token)
 
 		if err != nil {
-			log.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
+			logger.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
 		}
 
 		// converts long polling to webhook integration for local development
@@ -50,17 +45,12 @@ func main() {
 				case <-ctx.Done():
 					return
 				default:
-					msg, err := json.Marshal(update)
-					log.Println(string(msg))
-					if err != nil {
-						log.Panicf("an error occurred when marshling a telegram message: %s", err.Error())
-					}
-
-					host := fmt.Sprintf("http://localhost:%s/api/v1/telegram/updates", port)
+					msg, _ := json.Marshal(update)
+					host := fmt.Sprintf("http://localhost:%s/api/v1/telegram/updates", cfg.Port)
 					// nolint
 					_, err = http.Post(host, "application/json", bytes.NewBuffer(msg))
 					if err != nil {
-						log.Panicf("an error occurred when send POST request: %s", err.Error())
+						logger.Errorf("an error occurred when send POST request: %s", err.Error())
 					}
 				}
 			}

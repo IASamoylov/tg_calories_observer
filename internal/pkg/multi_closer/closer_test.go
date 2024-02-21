@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/multi_closer/mocks"
 )
@@ -89,7 +89,7 @@ func TestClose(t *testing.T) {
 		uniqueCloser.Add(closer1, closer2, closer3)
 
 		err := uniqueCloser.Close()
-		assert.EqualError(t, err, "an error occurred when closing the resource *mocks.MockCloser: test error")
+		assert.EqualError(t, err, "произошла ошибка в момент завершения работы ресурса *mocks.MockCloser: test error")
 		WaitGlobal()
 	})
 }
