@@ -14,30 +14,33 @@ func (ctr Controller) V1WebhookUpdates(writer http.ResponseWriter, req *http.Req
 		return
 	}
 
-	update := <-ctr.bot.ListenForWebhookRespReqFormat(writer, req)
-
+	update := <-ctr.decoder.ListenForWebhookRespReqFormat(writer, req)
 	if update.Message == nil && update.CallbackQuery == nil { // If we got a message
 		return
 	}
 
-	getUser := func(from *tgbotapi.User) dto.User {
-		return dto.NewUser(
-			from.ID,
-			from.UserName,
-			from.FirstName,
-			from.LastName,
-			from.LanguageCode,
-		)
-	}
-
 	if update.CallbackQuery != nil {
-		ctr.commandRouter.Execute(req.Context(), getUser(update.CallbackQuery.From), update.CallbackQuery.Data)
+		//ctr.commandRouter.Execute(req.Context(), getUser(update.CallbackQuery.From), update.CallbackQuery.Data)
 
-		return
+		update.Message = &tgbotapi.Message{
+			From: update.CallbackQuery.From,
+			Text: update.CallbackQuery.Data,
+		}
 	}
 
 	if update.Message.IsCommand() {
-		ctr.commandRouter.Execute(req.Context(), getUser(update.Message.From), update.Message.Text)
+		ctr.commandRouter.Execute(
+			req.Context(),
+			dto.NewUser(
+				update.Message.From.ID,
+				update.Message.From.UserName,
+				update.Message.From.FirstName,
+				update.Message.From.LastName,
+				update.Message.From.LanguageCode,
+			),
+			update.Message.Command(),
+			update.Message.CommandArguments(),
+		)
 
 		return
 	}

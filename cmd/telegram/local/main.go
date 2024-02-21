@@ -6,7 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/config"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
 
@@ -17,13 +18,8 @@ import (
 )
 
 func main() {
-	port, ok := os.LookupEnv("PORT")
-	if !ok {
-		port = "9093"
-	}
-
-	app.NewApp(context.Background(), app.WithTelegramAPI(func(token string) types.Telegram {
-		api, err := tgbotapi.NewBotAPI(token)
+	app.NewApp(context.Background(), app.WithTelegramAPI(func(cfg config.App) types.Telegram {
+		api, err := tgbotapi.NewBotAPI(cfg.Telegram.Token)
 
 		if err != nil {
 			logger.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
@@ -50,7 +46,7 @@ func main() {
 					return
 				default:
 					msg, _ := json.Marshal(update)
-					host := fmt.Sprintf("http://localhost:%s/api/v1/telegram/updates", port)
+					host := fmt.Sprintf("http://localhost:%s/api/v1/telegram/updates", cfg.Port)
 					// nolint
 					_, err = http.Post(host, "application/json", bytes.NewBuffer(msg))
 					if err != nil {

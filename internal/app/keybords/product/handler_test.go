@@ -10,7 +10,7 @@ import (
 
 	"github.com/IASamoylov/tg_calories_observer/internal/domain/entity/dto"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	"github.com/stretchr/testify/assert"
 )

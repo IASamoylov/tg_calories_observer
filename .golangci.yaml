@@ -23,7 +23,6 @@ linters:
     - govet
     - ineffassign
     - contextcheck
-    - errchkjson
     - gofmt
     - megacheck
     - revive

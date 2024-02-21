@@ -3,7 +3,6 @@ package commandrouter
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
 
@@ -43,7 +42,7 @@ func NewCommandRouter(
 }
 
 // Execute маршрутизирует команду
-func (router *CommandRouter) Execute(ctx context.Context, user dto.User, message string) {
+func (router *CommandRouter) Execute(ctx context.Context, user dto.User, command, args string) {
 	defer router.recover(user)
 
 	err := router.userStorage.Upsert(ctx, user)
@@ -54,27 +53,29 @@ func (router *CommandRouter) Execute(ctx context.Context, user dto.User, message
 		return
 	}
 
-	parts := strings.Split(message, " ")
-	if len(parts) == 0 || len(message) == 0 {
+	if len(command) == 0 {
 		return
 	}
 
-	if handler, ok := router.route[parts[:1][0]]; ok {
-		msg, err := handler.Execute(ctx, user, parts[1:]...)
+	if handler, ok := router.route[command]; ok {
+		msg, err := handler.Execute(ctx, user, args)
 		if err != nil {
-			logger.Error("Возникла ошибки в момент обработки команды", "err", err, "command", parts[:1][0])
+			logger.Error("Возникла ошибки в момент обработки команды", "err", err, "command", command)
 			router.client.SendErr(user.TelegramID(), types.ErrCommon)
 
 			return
 		}
-		router.client.Send(msg)
+
+		if msg != nil {
+			router.client.Send(msg)
+		}
 
 		return
 	}
 
 	err = fmt.Errorf("@%s к сожалению, ваш запрос '%s' не распознан. Прошу прощения за неудобства. "+
 		"Продолжайте следить за инструкциями %s и оставайтесь "+
-		"на связи для дальнейших указаний.", user.UserName(), parts[:1][0], router.helpCommand.Alias())
+		"на связи для дальнейших указаний.", user.UserName(), command, router.helpCommand.Alias())
 
 	router.client.SendErr(user.TelegramID(), err)
 }

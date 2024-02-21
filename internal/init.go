@@ -3,6 +3,11 @@ package internal
 import (
 	"fmt"
 	"net/http"
+	"time"
+
+	telegramlogger "github.com/IASamoylov/tg_calories_observer/internal/pkg/logger/cores/telegram"
+
+	"github.com/IASamoylov/tg_calories_observer/internal/config"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/clients/telegram"
 
@@ -18,8 +23,6 @@ import (
 
 	"github.com/IASamoylov/tg_calories_observer/internal/app/inline_keyboards/product"
 
-	telegramlogger "github.com/IASamoylov/tg_calories_observer/internal/pkg/logger/cores/telegram"
-
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/crypto"
@@ -34,7 +37,7 @@ import (
 
 	debugv1 "github.com/IASamoylov/tg_calories_observer/internal/api/debug/v1"
 	telegramv1 "github.com/IASamoylov/tg_calories_observer/internal/api/telegram/v1"
-	config "github.com/IASamoylov/tg_calories_observer/internal/config/debug"
+	configdebug "github.com/IASamoylov/tg_calories_observer/internal/config/debug"
 	simpleserver "github.com/IASamoylov/tg_calories_observer/internal/pkg/simple_server"
 )
 
@@ -53,7 +56,6 @@ func (app *App) InitCryptor() *App {
 func (app *App) InitControllers() *App {
 	app.controllers.debug = debugv1.NewController()
 	app.controllers.telegram = telegramv1.NewController(
-		app.externalClients.telegramBotAPI,
 		app.services.commandRouter,
 		//app.services.keyboardRouter,
 	)
@@ -68,8 +70,8 @@ func (app *App) InitServer() *App {
 
 	// optimizing the use of yandex cloud resources
 	var apiPrefix string
-	if config.Version == config.BetaVersion {
-		apiPrefix = fmt.Sprintf("%s/", config.BetaVersion)
+	if configdebug.Version == configdebug.BetaVersion {
+		apiPrefix = fmt.Sprintf("%s/", configdebug.BetaVersion)
 	}
 
 	app.httpServer = simpleserver.
@@ -116,20 +118,28 @@ func (app *App) InitRepositories() *App {
 // под средством протоколов http/gRPC и других. Могут быть переопределены на старте приложения.
 func (app *App) InitExternalClientsConnIfNotSet() *App {
 	if app.externalClients.telegramBotAPI == nil {
-		// https://core.telegram.org/bots/webhooks#testing-your-bot-with-updates
-		api, err := tgbotapi.NewBotAPI(app.Cfg.Telegram.Token)
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.MaxIdleConns = 100
+		transport.MaxConnsPerHost = 100
+		transport.MaxIdleConnsPerHost = 100
+		httpClient := &http.Client{
+			Timeout:   10 * time.Second,
+			Transport: transport,
+		}
+
+		api, err := tgbotapi.NewBotAPIWithClient(app.Cfg.Telegram.Token, tgbotapi.APIEndpoint, httpClient)
 		if err != nil {
 			logger.Panicf("an error occurred when creating a telegram client API: %s", err.Error())
 		}
 
 		api.Debug = true
 		app.externalClients.telegramBotAPI = api
-	}
 
-	// только для полноценной интеграции с телеграммом будет подключен дополнительный логгер
-	logger.SetLogger(logger.New(telegramlogger.NewChannelErrorLoggerCore(
-		app.Cfg.Telegram.Support,
-		app.externalClients.telegramBotAPI)))
+		// только для полноценной интеграции с телеграммом будет подключен дополнительный логгер
+		logger.SetLogger(logger.NewDefault(telegramlogger.NewChannelErrorLoggerCore(
+			app.Cfg.Telegram.Support,
+			app.externalClients.telegramBotAPI)))
+	}
 
 	return app
 }
@@ -192,8 +202,8 @@ func (app *App) InitServices() *App {
 	return app
 }
 
-// ApplyOverridesExternalClientConn переопределяет внешние API для возможность изоляционного тестирования (e2e) сервиса.
-func (app *App) ApplyOverridesExternalClientConn(overrides ...OverrideExternalClient) *App {
+// ApplyOverrides переопределяет конфигурацию приложения для возможности изоляционного тестирования (e2e) сервиса.
+func (app *App) ApplyOverrides(overrides ...AppOverrides) *App {
 	for _, override := range overrides {
 		app = override(app)
 	}
@@ -203,9 +213,18 @@ func (app *App) ApplyOverridesExternalClientConn(overrides ...OverrideExternalCl
 
 // WithTelegramAPI переопределяет клиент для взаимодействия с telegram API. Для локально разработки используется
 // преобразование long pooling в web hook
-func WithTelegramAPI(ctor func(token string) types.Telegram) OverrideExternalClient {
+func WithTelegramAPI(ctor func(cfg config.App) types.Telegram) AppOverrides {
 	return func(app *App) *App {
-		app.externalClients.telegramBotAPI = ctor(app.Cfg.Telegram.Token)
+		app.externalClients.telegramBotAPI = ctor(app.Cfg)
+
+		return app
+	}
+}
+
+// WithCustomPort переопределеяет порт для запуск приложения
+func WithCustomPort(port string) AppOverrides {
+	return func(app *App) *App {
+		app.Cfg.Port = port
 
 		return app
 	}

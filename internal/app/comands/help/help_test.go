@@ -10,7 +10,7 @@ import (
 
 	"github.com/IASamoylov/tg_calories_observer/internal/domain/entity/dto"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestExecute(t *testing.T) {
@@ -21,16 +21,16 @@ func TestExecute(t *testing.T) {
 
 		mockCommand := NewMockсommand(gomock.NewController(t))
 
-		mockCommand.EXPECT().Alias().Return("/cmd_1")
+		mockCommand.EXPECT().Alias().Return("cmd_1")
 		mockCommand.EXPECT().Description().Return("описание команды 1")
-		mockCommand.EXPECT().Alias().Return("/cmd_2")
+		mockCommand.EXPECT().Alias().Return("cmd_2")
 		mockCommand.EXPECT().Description().Return("описание команды 2")
 
 		handler := NewHandler(mockCommand, mockCommand)
 
 		user := dto.NewUser(100500, "", "", "", "")
 
-		msg, err := handler.Execute(context.Background(), user)
+		msg, err := handler.Execute(context.Background(), user, "")
 		assert.NoError(t, err)
 
 		expectedMessage := "Вот что я умею:\n" +
@@ -46,9 +46,11 @@ func TestExecute(t *testing.T) {
 		handler := NewHandler()
 		user := dto.NewUser(100500, "", "", "", "")
 
-		msg, err := handler.Execute(context.Background(), user)
+		msg, err := handler.Execute(context.Background(), user, "")
 		assert.NoError(t, err)
-		assert.Nil(t, msg)
+		expectedMessage := "Вот что я умею:\n\n" +
+			"Если у вас есть вопросы или нужна помощь, не стесняйтесь обращаться!"
+		assert.EqualValues(t, tgbotapi.NewMessage(100500, expectedMessage), msg)
 	})
 }
 
@@ -58,7 +60,7 @@ func TestAlias(t *testing.T) {
 	t.Run("возврщается название команды", func(t *testing.T) {
 		handler := NewHandler()
 
-		assert.Equal(t, "/help", handler.Alias())
+		assert.Equal(t, "help", handler.Alias())
 	})
 }
 

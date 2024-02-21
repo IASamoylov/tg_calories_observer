@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
-
 	"github.com/IASamoylov/tg_calories_observer/internal/domain/entity/dto"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const (
-	name = "/help"
+	name = "help"
 	text = "Вот что я умею:\n" +
 		"%s\n" +
 		"Если у вас есть вопросы или нужна помощь, не стесняйтесь обращаться!"
@@ -25,16 +23,10 @@ type Handler struct {
 }
 
 // Execute исполняет команду /help
-func (handler *Handler) Execute(_ context.Context, user dto.User, _ ...string) (tgbotapi.Chattable, error) {
-	if len(handler.commands) == 0 {
-		logger.Error("Не проинцилизированы подсказки для команды %s", name)
-
-		return nil, nil
-	}
-
+func (handler *Handler) Execute(_ context.Context, user dto.User, _ string) (tgbotapi.Chattable, error) {
 	var builder strings.Builder
 	for _, cmd := range handler.commands {
-		builder.WriteString(fmt.Sprintf("- %s - %s \n", cmd.Alias(), cmd.Description()))
+		builder.WriteString(fmt.Sprintf("- /%s - %s \n", cmd.Alias(), cmd.Description()))
 	}
 
 	msg := tgbotapi.NewMessage(user.TelegramID(), fmt.Sprintf(text, builder.String()))

@@ -35,7 +35,7 @@ func (client *Client) Request(c tgbotapi.Chattable) {
 // SendErr отправляет сообщение с ошибкой пользователю
 func (client *Client) SendErr(receiver int64, err error) {
 	msg := tgbotapi.NewMessage(receiver, err.Error())
-	msg.ParseMode = "MarkdownV2"
+	msg.ParseMode = tgbotapi.ModeMarkdownV2
 
 	client.Send(msg)
 }

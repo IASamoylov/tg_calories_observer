@@ -23,8 +23,7 @@ APP_LDFLAGS_MODULE_NAME=${shell head -n 1 go.mod | cut -c 8-}
 APP_LDFLAGS=-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.AppName=${APP_NAME}'\
 			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.Version=${BUILD_APP_VERSION}'\
 			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHA=${BUILD_SHA}'\
-			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHAShort=${BUILD_SHA_SHORT}'\
-			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.BuildTime=$(shell date -u)'
+			-X '${APP_LDFLAGS_MODULE_NAME}/internal/config/debug.GithubSHAShort=${BUILD_SHA_SHORT}'
 
 
 # ==================================================================================== #
@@ -68,6 +67,7 @@ bin-deps: .install-lint
 	GOBIN=$(LOCAL_BIN) go install go.uber.org/mock/mockgen@latest
 	GOBIN=$(LOCAL_BIN) go install gotest.tools/gotestsum@latest
 	GOBIN=$(LOCAL_BIN) go install github.com/wadey/gocovmerge@latest
+	GOBIN=$(LOCAL_BIN) go install github.com/onsi/ginkgo/v2/ginkgo
 	go get github.com/golang/mock/mockgen
 
 
@@ -155,17 +155,31 @@ test:
 	rm $(GO_UNIT_TEST_COVER_PROFILE).tmp
 
 
-## integration-test: runs integration tests via gotestsum with coverage
+## e2e: runs integration tests via ginkgo with coverage
+.PHONY: e2e-debug
+e2e-debug: infra migration-up
+	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/ginkgo -tags=e2e -v ./e2e/...
+	#GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
+#		--format testname \
+#		--packages $(GO_INTEGRATION_TEST_DIRECTORY) \
+#		--junitfile $(GO_INTEGRATION_TEST_REPORT) \
+#		--junitfile-testcase-classname relative \
+#		-- -tags=e2e -cover -covermode=count -coverprofile=$(GO_INTEGRATION_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_INTEGRATION_TEST_COVER_PKG)
+	#grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GO_INTEGRATION_TEST_COVER_PROFILE)
+	#rm $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp
+
+## e2e: runs integration tests via ginkgo with coverage
 .PHONY: e2e
-e2e:
-	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
-		--format testname \
-		--packages $(GO_INTEGRATION_TEST_DIRECTORY) \
-		--junitfile $(GO_INTEGRATION_TEST_REPORT) \
-		--junitfile-testcase-classname relative \
-		-- -tags=e2e -cover -covermode=count -coverprofile=$(GO_INTEGRATION_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_INTEGRATION_TEST_COVER_PKG)
-	grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GO_INTEGRATION_TEST_COVER_PROFILE)
-	rm $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp
+e2e: infra migration-up
+	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/ginkgo -tags=e2e --succinct ./e2e/...
+	#GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
+#		--format testname \
+#		--packages $(GO_INTEGRATION_TEST_DIRECTORY) \
+#		--junitfile $(GO_INTEGRATION_TEST_REPORT) \
+#		--junitfile-testcase-classname relative \
+#		-- -tags=e2e -cover -covermode=count -coverprofile=$(GO_INTEGRATION_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_INTEGRATION_TEST_COVER_PKG)
+	#grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GO_INTEGRATION_TEST_COVER_PROFILE)
+	#rm $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp
 
 ## cg-test: runs codegen before tests
 .PHONY: cg-test

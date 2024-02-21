@@ -10,7 +10,7 @@ import (
 
 	"github.com/IASamoylov/tg_calories_observer/internal/domain/entity/dto"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +26,7 @@ var me = tgbotapi.User{ID: 35125}
 
 func beforeTest(t *testing.T) (*Handler, *MockkeyboardButton, *mockstelegram.MockTelegram) {
 	mockHelpCommand := NewMockhelpCommand(gomock.NewController(t))
-	mockHelpCommand.EXPECT().Alias().Return("/help").AnyTimes()
+	mockHelpCommand.EXPECT().Alias().Return("help").AnyTimes()
 
 	mockKeyboardButton := NewMockkeyboardButton(gomock.NewController(t))
 	mockTelegram := mockstelegram.NewMockTelegram(gomock.NewController(t))
@@ -51,12 +51,12 @@ func TestExecute(t *testing.T) {
 			Return(tgbotapi.UserProfilePhotos{Photos: [][]tgbotapi.PhotoSize{{{FileID: fileID}}}}, nil).
 			Times(1)
 
-		msg, err := handler.Execute(context.Background(), user)
+		msg, err := handler.Execute(context.Background(), user, "")
 		assert.NoError(t, err)
 		assert.Equal(t, expectedPhoto, msg)
 
 		t.Run("повторный вызов команды не будет запрашивать фото профиля", func(t *testing.T) {
-			msg, err = handler.Execute(context.Background(), user)
+			msg, err = handler.Execute(context.Background(), user, "")
 			assert.NoError(t, err)
 
 			assert.Equal(t, expectedPhoto, msg)
@@ -75,7 +75,7 @@ func TestExecute(t *testing.T) {
 			mockTelegram.EXPECT().GetMe().Return(tgbotapi.User{}, fmt.Errorf("GetMe error"))
 			mockTelegram.EXPECT().GetUserProfilePhotos(gomock.Any()).Times(0)
 
-			msg, err := handler.Execute(context.Background(), user)
+			msg, err := handler.Execute(context.Background(), user, "")
 			assert.NoError(t, err)
 			assert.Equal(t, expectedMessage, msg)
 		})
@@ -91,7 +91,7 @@ func TestExecute(t *testing.T) {
 				GetUserProfilePhotos(tgbotapi.UserProfilePhotosConfig{UserID: me.ID, Limit: 1}).
 				Return(tgbotapi.UserProfilePhotos{}, fmt.Errorf("GetUserProfilePhotos error"))
 
-			msg, err := handler.Execute(context.Background(), user)
+			msg, err := handler.Execute(context.Background(), user, "")
 
 			assert.NoError(t, err)
 			assert.Equal(t, expectedMessage, msg)
@@ -123,7 +123,7 @@ func TestExecute(t *testing.T) {
 						GetUserProfilePhotos(tgbotapi.UserProfilePhotosConfig{UserID: me.ID, Limit: 1}).
 						Return(tgbotapi.UserProfilePhotos{Photos: tc.photo}, nil)
 
-					msg, err := handler.Execute(context.Background(), user)
+					msg, err := handler.Execute(context.Background(), user, "")
 
 					assert.NoError(t, err)
 					assert.Equal(t, expectedMessage, msg)
@@ -168,7 +168,7 @@ func TestWithKeyboardButton(t *testing.T) {
 			mockKeyboardButton.EXPECT().Text().Return(expectedSettingBtn.Text)
 			handler.WithKeyboardButton(mockKeyboardButton, mockKeyboardButton, mockKeyboardButton)
 
-			msg, err := handler.Execute(context.Background(), user)
+			msg, err := handler.Execute(context.Background(), user, "")
 			assert.NoError(t, err)
 			assert.Equal(t, expectedMessage, msg)
 		})
@@ -190,7 +190,7 @@ func TestWithKeyboardButton(t *testing.T) {
 			mockKeyboardButton.EXPECT().Text().Return(expectedSettingBtn.Text)
 			handler.WithKeyboardButton(mockKeyboardButton, mockKeyboardButton, mockKeyboardButton)
 
-			msg, err := handler.Execute(context.Background(), user)
+			msg, err := handler.Execute(context.Background(), user, "")
 
 			assert.NoError(t, err)
 			assert.Equal(t, expectedPhoto, msg)
@@ -204,7 +204,7 @@ func TestAlias(t *testing.T) {
 	t.Run("возврщается название команды", func(t *testing.T) {
 		handler := NewHandler(nil, nil)
 
-		assert.Equal(t, "/start", handler.Alias())
+		assert.Equal(t, "start", handler.Alias())
 	})
 }
 

@@ -7,7 +7,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-//go:generate mockgen -source=dependecies.go -destination=dependecies_mocks.go -package=command_router . userStorage,telegram,commandRouterHandler
+//go:generate mockgen -source=dependecies.go -destination=dependecies_mocks.go -package=commandrouter . userStorage,telegram,commandRouterHandler
 
 type userStorage interface {
 	Upsert(ctx context.Context, user dto.User) error
@@ -20,7 +20,7 @@ type telegram interface {
 }
 
 type commandRouterHandler interface {
-	Execute(ctx context.Context, sender dto.User, args ...string) (tgbotapi.Chattable, error)
+	Execute(ctx context.Context, sender dto.User, args string) (tgbotapi.Chattable, error)
 	Alias() string
 	Description() string
 }

@@ -20,8 +20,6 @@ import (
 
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/graceful"
 
-	"github.com/IASamoylov/tg_calories_observer/internal/pkg/logger"
-
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/IASamoylov/tg_calories_observer/internal/pkg/crypto"
@@ -95,25 +93,24 @@ type App struct {
 	ctx                   context.Context
 }
 
-// OverrideExternalClient функциония позволяющая переопределить компонент системы,
+// AppOverrides функциония позволяющая переопределить компонент системы,
 // переопределяет только внешние клиенты. Удобно при использование е2е тестов чтобы
 // не использовать реальные внешние сервисы, а моки.
-type OverrideExternalClient func(app *App) *App
+type AppOverrides func(app *App) *App
 
 // NewApp создает новое приеложение инцилизирая все зависимости последовательно
-func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
+func NewApp(ctx context.Context, overrides ...AppOverrides) *App {
 	app := &App{
-		ctx:    ctx,
 		Cfg:    config.NewConfig(),
 		closer: multicloser.New(),
+		ctx:    ctx,
 	}
 
 	// регистриуем освобождение глобальные ресурсов
 	app.closer.Add(multicloser.GetGlobalCloser())
-	app.closer.Add(multicloser.NewIOCloserWrap(logger.Sync))
 
 	app.InitCryptor().
-		ApplyOverridesExternalClientConn(overrides...).
+		ApplyOverrides(overrides...).
 		InitExternalClientsConnIfNotSet().
 		InitClients().
 		InitPgxConnection().
@@ -126,16 +123,13 @@ func NewApp(ctx context.Context, overrides ...OverrideExternalClient) *App {
 		InitServer()
 
 	// регистрируем
-	graceful.Shutdown(app.closer, os.Interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+	graceful.Shutdown(ctx, app.closer, os.Interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 
 	return app
 }
 
 // Run запускает сервер
 func (app *App) Run() {
-	//app.services.commandRouter.InitMenu()
 	app.httpServer.Run()
 	app.closer.Wait()
-
-	logger.Info("Server Stopped")
 }

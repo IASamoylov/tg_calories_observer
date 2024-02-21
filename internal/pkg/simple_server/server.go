@@ -16,6 +16,9 @@ type SimpleHTTPServer struct {
 	base      http.Server
 }
 
+// Handler server handler
+type Handler func(writer http.ResponseWriter, req *http.Request)
+
 // NewHTTPServer создает простой сервер
 func NewHTTPServer(host, apiPrefix string) *SimpleHTTPServer {
 	return &SimpleHTTPServer{
@@ -33,11 +36,19 @@ func NewHTTPServer(host, apiPrefix string) *SimpleHTTPServer {
 func (server *SimpleHTTPServer) Register(
 	method string,
 	path string,
-	handler func(writer http.ResponseWriter, req *http.Request)) *SimpleHTTPServer {
+	handler Handler) *SimpleHTTPServer {
 	if mux, ok := server.base.Handler.(*http.ServeMux); ok {
 		path = fmt.Sprintf("/%s%s", server.apiPrefix, path)
 
 		mux.HandleFunc(path, func(writer http.ResponseWriter, req *http.Request) {
+			defer func() {
+				if detail := recover(); detail != nil {
+					logger.Errorf("Произошла непридведенная ошибка: %s", detail)
+
+					writer.WriteHeader(http.StatusInternalServerError)
+				}
+			}()
+
 			if req.Method != method {
 				writer.WriteHeader(http.StatusNotFound)
 

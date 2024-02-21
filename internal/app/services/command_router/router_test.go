@@ -9,7 +9,7 @@ import (
 	"github.com/IASamoylov/tg_calories_observer/internal/utils/types"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 var user = dto.NewUser(100500, "test", "", "", "")
@@ -42,7 +42,7 @@ func TestExecute(t *testing.T) {
 
 		mockTelegram.EXPECT().SendErr(user.TelegramID(), types.ErrCommon)
 
-		router.Execute(context.Background(), user, "/start")
+		router.Execute(context.Background(), user, "/start", "")
 	})
 
 	t.Run("обработка неизвестной команды приведет к сообщению с ошибкой", func(t *testing.T) {
@@ -56,9 +56,9 @@ func TestExecute(t *testing.T) {
 			"Прошу прощения за неудобства. Продолжайте следить за инструкциями /help и " +
 			"оставайтесь на связи для дальнейших указаний.")
 		mockTelegram.EXPECT().SendErr(user.TelegramID(), expectedErr)
-		mockStartCmd.EXPECT().Execute(gomock.Any(), user).Times(0)
+		mockStartCmd.EXPECT().Execute(gomock.Any(), user, "").Times(0)
 
-		router.Execute(context.Background(), user, "/hello")
+		router.Execute(context.Background(), user, "/hello", "")
 	})
 
 	t.Run("получение ошибки при акутализации данных пользоватя приведет к сообщению с ошибкой", func(t *testing.T) {
@@ -69,9 +69,9 @@ func TestExecute(t *testing.T) {
 		mockUserStorage.EXPECT().Upsert(gomock.Any(), user).Return(errors.New("Upsert err"))
 
 		mockTelegram.EXPECT().SendErr(user.TelegramID(), types.ErrCommon)
-		mockStartCmd.EXPECT().Execute(gomock.Any(), user).Times(0)
+		mockStartCmd.EXPECT().Execute(gomock.Any(), user, "").Times(0)
 
-		router.Execute(context.Background(), user, "/start")
+		router.Execute(context.Background(), user, "/start", "")
 	})
 
 	t.Run("пустое сообщение не будет обработано", func(t *testing.T) {
@@ -80,9 +80,9 @@ func TestExecute(t *testing.T) {
 		router, _, mockUserStorage, mockStartCmd := beforeTest(t)
 
 		mockUserStorage.EXPECT().Upsert(gomock.Any(), user).Return(nil)
-		mockStartCmd.EXPECT().Execute(gomock.Any(), user).Times(0)
+		mockStartCmd.EXPECT().Execute(gomock.Any(), user, "").Times(0)
 
-		router.Execute(context.Background(), user, "")
+		router.Execute(context.Background(), user, "", "")
 	})
 
 	t.Run("получение ошибки при обработки команды приведет к сообщению с ошибкой", func(t *testing.T) {
@@ -91,13 +91,13 @@ func TestExecute(t *testing.T) {
 		router, mockTelegram, mockUserStorage, mockStartCmd := beforeTest(t)
 
 		mockUserStorage.EXPECT().Upsert(gomock.Any(), user).Return(nil)
-		mockStartCmd.EXPECT().Execute(gomock.Any(), user).Return(nil, errors.New("Execute error"))
+		mockStartCmd.EXPECT().Execute(gomock.Any(), user, "").Return(nil, errors.New("Execute error"))
 		mockTelegram.EXPECT().SendErr(user.TelegramID(), types.ErrCommon)
 
-		router.Execute(context.Background(), user, "/start")
+		router.Execute(context.Background(), user, "/start", "")
 	})
 
-	t.Run("команда будет корректно обработана и совет ", func(t *testing.T) {
+	t.Run("команда будет корректно обработана", func(t *testing.T) {
 		t.Parallel()
 
 		router, mockTelegram, mockUserStorage, mockStartCmd := beforeTest(t)
@@ -105,10 +105,10 @@ func TestExecute(t *testing.T) {
 		expectedMsg := tgbotapi.NewMessage(user.TelegramID(), "hello")
 
 		mockUserStorage.EXPECT().Upsert(gomock.Any(), user).Return(nil)
-		mockStartCmd.EXPECT().Execute(gomock.Any(), user).Return(expectedMsg, nil)
+		mockStartCmd.EXPECT().Execute(gomock.Any(), user, "args, args").Return(expectedMsg, nil)
 		mockTelegram.EXPECT().Send(expectedMsg)
 
-		router.Execute(context.Background(), user, "/start")
+		router.Execute(context.Background(), user, "/start", "args, args")
 	})
 }
 

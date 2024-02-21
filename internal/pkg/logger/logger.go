@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"io"
 	"os"
 
 	config "github.com/IASamoylov/tg_calories_observer/internal/config/debug"
@@ -13,7 +14,7 @@ var log *zap.SugaredLogger
 var defaultLvl = zap.NewAtomicLevel()
 
 func init() {
-	SetLogger(New())
+	SetLogger(NewDefault())
 }
 
 // Sync ...
@@ -31,14 +32,19 @@ func SetLogger(logger *zap.SugaredLogger) {
 //	return defaultLvl.UnmarshalText([]byte(lvl))
 //}
 
-// New создает новый экземпляр zap.SugaredLogger
-func New(additionalCores ...zapcore.Core) *zap.SugaredLogger {
+// NewDefault создает новый экземпляр zap.SugaredLogger
+func NewDefault(additionalCores ...zapcore.Core) *zap.SugaredLogger {
+	return New(os.Stdout, additionalCores...)
+}
+
+// New создает новый экземпляр zap.SugaredLogger с возможность переопределить stdout
+func New(writer io.Writer, additionalCores ...zapcore.Core) *zap.SugaredLogger {
 	conf := zap.NewProductionEncoderConfig()
 	conf.TimeKey = "time"
 	conf.EncodeTime = zapcore.RFC3339TimeEncoder
 
 	baseCores := []zapcore.Core{
-		zapcore.NewCore(zapcore.NewJSONEncoder(conf), zapcore.AddSync(os.Stdout), defaultLvl),
+		zapcore.NewCore(zapcore.NewJSONEncoder(conf), zapcore.AddSync(writer), defaultLvl),
 	}
 
 	cores := append(baseCores, additionalCores...)

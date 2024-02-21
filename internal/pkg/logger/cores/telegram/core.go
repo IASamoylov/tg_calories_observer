@@ -30,7 +30,7 @@ func (ws writeSyncer) Write(p []byte) (n int, err error) {
 	}
 
 	msg := tgbotapi.NewMessage(ws.channelID, fmt.Sprintf("```json\n%s\n```", prettyJSON.String()))
-	msg.ParseMode = "MarkdownV2"
+	msg.ParseMode = tgbotapi.ModeMarkdownV2
 	_, err = ws.client.Send(msg)
 
 	return len(p), err
