@@ -83,6 +83,10 @@ bin-deps: .install-lint ci-cd-deps
 .PHONY: infra
 infra:
 	docker-compose -f ./.build/docker-compose.yaml up -d --force-recreate --wait
+.PHONY: infra-down
+infra-down:
+	docker-compose -f ./.build/docker-compose.yaml down
+
 
 ## migration-reset: rollback migrations
 .PHONY: migration-reset
@@ -163,27 +167,14 @@ test:
 .PHONY: e2e-debug
 e2e-debug: infra migration-up
 	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/ginkgo -tags=e2e -v ./e2e/...
-	#GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
-#		--format testname \
-#		--packages $(GO_INTEGRATION_TEST_DIRECTORY) \
-#		--junitfile $(GO_INTEGRATION_TEST_REPORT) \
-#		--junitfile-testcase-classname relative \
-#		-- -tags=e2e -cover -covermode=count -coverprofile=$(GO_INTEGRATION_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_INTEGRATION_TEST_COVER_PKG)
-	#grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GO_INTEGRATION_TEST_COVER_PROFILE)
-	#rm $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp
 
 ## e2e: runs integration tests via ginkgo with coverage
 .PHONY: e2e
 e2e: infra migration-up
-	GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/ginkgo -tags=e2e --succinct ./e2e/...
-	#GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/gotestsum \
-#		--format testname \
-#		--packages $(GO_INTEGRATION_TEST_DIRECTORY) \
-#		--junitfile $(GO_INTEGRATION_TEST_REPORT) \
-#		--junitfile-testcase-classname relative \
-#		-- -tags=e2e -cover -covermode=count -coverprofile=$(GO_INTEGRATION_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_INTEGRATION_TEST_COVER_PKG)
-	#grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GO_INTEGRATION_TEST_COVER_PROFILE)
-	#rm $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp
+	#GOEXPERIMENT=nocoverageredesign $(LOCAL_BIN)/ginkgo -tags=e2e -cover -covermode=count -coverprofile=$(GO_INTEGRATION_TEST_COVER_PROFILE).tmp -coverpkg=$(GO_INTEGRATION_TEST_COVER_PKG) --succinct ./e2e/...
+	make infra-down
+#	grep -vE '$(GO_INTEGRATION_TEST_COVER_EXCLUDE)' $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp > $(GO_INTEGRATION_TEST_COVER_PROFILE)
+#	rm $(GO_INTEGRATION_TEST_COVER_PROFILE).tmp
 
 ## cg-test: runs codegen before tests
 .PHONY: cg-test
